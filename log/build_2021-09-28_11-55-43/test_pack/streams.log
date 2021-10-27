@@ -1,0 +1,24 @@
+[0.338s] Invoking command in '/root/test_ws/src/test_pack': PYTHONPATH=/root/test_ws/install/test_pack/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/test_pack build --build-base /root/test_ws/build/test_pack/build install --prefix /root/test_ws/install/test_pack --record /root/test_ws/build/test_pack/install.log --single-version-externally-managed
+[0.636s] running egg_info
+[0.637s] writing ../../build/test_pack/test_pack.egg-info/PKG-INFO
+[0.638s] writing dependency_links to ../../build/test_pack/test_pack.egg-info/dependency_links.txt
+[0.638s] writing entry points to ../../build/test_pack/test_pack.egg-info/entry_points.txt
+[0.638s] writing requirements to ../../build/test_pack/test_pack.egg-info/requires.txt
+[0.638s] writing top-level names to ../../build/test_pack/test_pack.egg-info/top_level.txt
+[0.709s] reading manifest file '../../build/test_pack/test_pack.egg-info/SOURCES.txt'
+[0.710s] writing manifest file '../../build/test_pack/test_pack.egg-info/SOURCES.txt'
+[0.710s] running build
+[0.711s] running build_py
+[0.711s] copying test_pack/Timoshenko_beam.py -> /root/test_ws/build/test_pack/build/lib/test_pack
+[0.712s] running install
+[0.713s] running install_lib
+[0.716s] copying /root/test_ws/build/test_pack/build/lib/test_pack/Timoshenko_beam.py -> /root/test_ws/install/test_pack/lib/python3.8/site-packages/test_pack
+[0.717s] byte-compiling /root/test_ws/install/test_pack/lib/python3.8/site-packages/test_pack/Timoshenko_beam.py to Timoshenko_beam.cpython-38.pyc
+[0.719s] running install_data
+[0.721s] running install_egg_info
+[0.723s] removing '/root/test_ws/install/test_pack/lib/python3.8/site-packages/test_pack-0.0.0-py3.8.egg-info' (and everything under it)
+[0.724s] Copying ../../build/test_pack/test_pack.egg-info to /root/test_ws/install/test_pack/lib/python3.8/site-packages/test_pack-0.0.0-py3.8.egg-info
+[0.725s] running install_scripts
+[0.754s] Installing talker script to /root/test_ws/install/test_pack/lib/test_pack
+[0.754s] writing list of installed files to '/root/test_ws/build/test_pack/install.log'
+[0.783s] Invoked command in '/root/test_ws/src/test_pack' returned '0': PYTHONPATH=/root/test_ws/install/test_pack/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/test_pack build --build-base /root/test_ws/build/test_pack/build install --prefix /root/test_ws/install/test_pack --record /root/test_ws/build/test_pack/install.log --single-version-externally-managed

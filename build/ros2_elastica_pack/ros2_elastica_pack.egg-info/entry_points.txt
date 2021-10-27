@@ -1,0 +1,5 @@
+[console_scripts]
+continuum_flagella_ros2 = ros2_elastica_pack.continuum_flagella_ros2:main
+continuum_snake_ros2 = ros2_elastica_pack.continuum_snake_ros2:main
+talker = ros2_elastica_pack.publisher_member_function:main
+

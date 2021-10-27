@@ -1,0 +1,3 @@
+[console_scripts]
+talker = test_pack.publisher_member_function:main
+

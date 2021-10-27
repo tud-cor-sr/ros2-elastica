@@ -1,0 +1,21 @@
+[0.264s] Invoking command in '/root/test_ws/src/test_pack': PYTHONPATH=/root/test_ws/install/test_pack/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/test_pack build --build-base /root/test_ws/build/test_pack/build install --prefix /root/test_ws/install/test_pack --record /root/test_ws/build/test_pack/install.log --single-version-externally-managed
+[0.489s] running egg_info
+[0.490s] writing ../../build/test_pack/test_pack.egg-info/PKG-INFO
+[0.490s] writing dependency_links to ../../build/test_pack/test_pack.egg-info/dependency_links.txt
+[0.490s] writing entry points to ../../build/test_pack/test_pack.egg-info/entry_points.txt
+[0.491s] writing requirements to ../../build/test_pack/test_pack.egg-info/requires.txt
+[0.491s] writing top-level names to ../../build/test_pack/test_pack.egg-info/top_level.txt
+[0.548s] reading manifest file '../../build/test_pack/test_pack.egg-info/SOURCES.txt'
+[0.549s] writing manifest file '../../build/test_pack/test_pack.egg-info/SOURCES.txt'
+[0.549s] running build
+[0.550s] running build_py
+[0.550s] running install
+[0.551s] running install_lib
+[0.553s] running install_data
+[0.553s] running install_egg_info
+[0.555s] removing '/root/test_ws/install/test_pack/lib/python3.8/site-packages/test_pack-0.0.0-py3.8.egg-info' (and everything under it)
+[0.556s] Copying ../../build/test_pack/test_pack.egg-info to /root/test_ws/install/test_pack/lib/python3.8/site-packages/test_pack-0.0.0-py3.8.egg-info
+[0.557s] running install_scripts
+[0.579s] Installing talker script to /root/test_ws/install/test_pack/lib/test_pack
+[0.580s] writing list of installed files to '/root/test_ws/build/test_pack/install.log'
+[0.604s] Invoked command in '/root/test_ws/src/test_pack' returned '0': PYTHONPATH=/root/test_ws/install/test_pack/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/test_pack build --build-base /root/test_ws/build/test_pack/build install --prefix /root/test_ws/install/test_pack --record /root/test_ws/build/test_pack/install.log --single-version-externally-managed
