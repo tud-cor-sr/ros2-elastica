@@ -1,3 +1,5 @@
+**Note:** This is the ROS2 workspace containing the package involving python3 scripts for simulating the *Cosserat rods* in PyElastica with information being exchanged on ros topics. Down below are the instructions for running the whole package separately in a docker container which can virtually run in any environment, which make it easy to deploy & test this application.
+
 # Instructions for pulling the ros2_elastica image and running the container & python3 scripts
 
 The current image works Linux kernel. First of all if you don't have the image then Pull the current distribution of Docker Image with the following command (all the development & testing is done on Ubuntu 18.04):
