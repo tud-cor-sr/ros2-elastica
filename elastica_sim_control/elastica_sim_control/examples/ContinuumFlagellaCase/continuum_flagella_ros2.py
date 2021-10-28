@@ -25,7 +25,8 @@ from ros2_elastica_torque_force_params import *
 from utils import *
 
 
-rod_tip_orientation = mp.Array('d', 4)
+rod_tip_orientation = mp.Array('d', 4) #Quaternion form
+
 # The array is of size 51 according to 'number of elements for Cosserat rod + 1'
 position_x = mp.Array('d',51)    
 position_y = mp.Array('d',51)
@@ -42,10 +43,8 @@ class FlagellaSimulator(BaseSystemCollection, Constraints, Forcing, CallBacks):
 def run_flagella(
     b_coeff, PLOT_FIGURE=False, SAVE_FIGURE=False, SAVE_VIDEO=False, SAVE_RESULTS=False
 ):
-    global t_coeff_optimized,period, wave_length, base_length, wave_number,phase_shift, rest_lengths, ramp_up_time_MuscleTorques, direction_MuscleTorques, \
-    with_spline,muscle_torque_mag, force, direction_UniformForces, uniformforces_mag, torque, direction_UniformTorques, uniformtorques_mag, start_force, end_force,\
-    ramp_up_time_EndpointForces, acc_gravity, dynamic_viscosity, start_force_mag, end_force_mag, ramp_up_time_EndpointForcesSinusoidal, tangent_direction, \
-    normal_direction,total_steps, rod_tip_orientation, position_x, position_y, position_z, velocity_x,velocity_y,velocity_z, pp_list_copy,print_params
+    
+    t_coeff_optimized = b_coeff
     
 
     flagella_sim = FlagellaSimulator()
@@ -144,9 +143,10 @@ def run_flagella(
             CallBackBaseClass.__init__(self)
             self.every = step_skip
             self.callback_params = callback_params
+            self.pp_list_copy = defaultdict(list)
 
         def make_callback(self, system, time, current_step: int):
-            global pp_list_copy, total_steps, rod_tip_orientation, position_x, position_y, position_z, velocity_x, velocity_y, velocity_z
+            
             
             if current_step % self.every == 0:
                 Q = system.director_collection[..., -1]
@@ -165,28 +165,28 @@ def run_flagella(
                 
                 if current_step ==total_steps:
                     pp_list_file = open("continuum_flagella.dat", "wb")
-                    pickle.dump(pp_list_copy, pp_list_file)
+                    pickle.dump(self.pp_list_copy, pp_list_file)
                     pp_list_file.close()
 
-                pp_list_copy["time"].append(time)
-                pp_list_copy["step"].append(current_step)
-                pp_list_copy["position"].append(
+                self.pp_list_copy["time"].append(time)
+                self.pp_list_copy["step"].append(current_step)
+                self.pp_list_copy["position"].append(
                     system.position_collection.copy()
                 )
-                pp_list_copy["velocity"].append(
+                self.pp_list_copy["velocity"].append(
                     system.velocity_collection.copy()
                 )
-                pp_list_copy["avg_velocity"].append(
+                self.pp_list_copy["avg_velocity"].append(
                     system.compute_velocity_center_of_mass()
                 )
-                pp_list_copy["center_of_mass"].append(
+                self.pp_list_copy["center_of_mass"].append(
                     system.compute_position_center_of_mass()
                 )
 
                 return
 
     pp_list = defaultdict(list)
-    pp_list_copy = defaultdict(list)
+    
     
     
 
@@ -202,7 +202,6 @@ def run_flagella(
     
     print("Total steps", total_steps)
     def ros_node():
-        global rod_tip_orientation, position_x, position_y, position_z, velocity_x, velocity_y, velocity_z,print_params
         rclpy.init(args=None)
         
         minimal_publisher_subcriber = MinimalPublisherSubscriberForces(t_coeff_optimized ,period, wave_length, base_length, wave_number,phase_shift, 
@@ -256,7 +255,6 @@ def run_flagella(
     return avg_forward, avg_lateral, pp_list
 
 def main():
-    global t_coeff_optimized
 
 
     # Options
