@@ -1,4 +1,0 @@
-[console_scripts]
-continuum_flagella_ros2 = elastica_sim_control.continuum_flagella_ros2:main
-continuum_snake_ros2 = elastica_sim_control.continuum_snake_ros2:main
-
