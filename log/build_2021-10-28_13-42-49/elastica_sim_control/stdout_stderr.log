@@ -1,0 +1,51 @@
+running egg_info
+creating ../../build/elastica_sim_control/elastica_sim_control.egg-info
+writing ../../build/elastica_sim_control/elastica_sim_control.egg-info/PKG-INFO
+writing dependency_links to ../../build/elastica_sim_control/elastica_sim_control.egg-info/dependency_links.txt
+writing entry points to ../../build/elastica_sim_control/elastica_sim_control.egg-info/entry_points.txt
+writing requirements to ../../build/elastica_sim_control/elastica_sim_control.egg-info/requires.txt
+writing top-level names to ../../build/elastica_sim_control/elastica_sim_control.egg-info/top_level.txt
+writing manifest file '../../build/elastica_sim_control/elastica_sim_control.egg-info/SOURCES.txt'
+reading manifest file '../../build/elastica_sim_control/elastica_sim_control.egg-info/SOURCES.txt'
+writing manifest file '../../build/elastica_sim_control/elastica_sim_control.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /root/ros2_elastica_ws/build/elastica_sim_control/build
+creating /root/ros2_elastica_ws/build/elastica_sim_control/build/lib
+creating /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+copying elastica_sim_control/continuum_flagella_postprocessing.py -> /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+copying elastica_sim_control/continuum_snake_ros2.py -> /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+copying elastica_sim_control/continuum_snake_postprocessing.py -> /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+copying elastica_sim_control/__init__.py -> /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+copying elastica_sim_control/ros2_elastica_torque_force_params.py -> /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+copying elastica_sim_control/continuum_flagella_ros2.py -> /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+copying elastica_sim_control/utils.py -> /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control
+running install
+running install_lib
+creating /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+copying /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control/continuum_flagella_postprocessing.py -> /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+copying /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control/continuum_snake_ros2.py -> /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+copying /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control/continuum_snake_postprocessing.py -> /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+copying /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control/__init__.py -> /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+copying /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control/ros2_elastica_torque_force_params.py -> /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+copying /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control/continuum_flagella_ros2.py -> /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+copying /root/ros2_elastica_ws/build/elastica_sim_control/build/lib/elastica_sim_control/utils.py -> /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control
+byte-compiling /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control/continuum_flagella_postprocessing.py to continuum_flagella_postprocessing.cpython-38.pyc
+byte-compiling /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control/continuum_snake_ros2.py to continuum_snake_ros2.cpython-38.pyc
+byte-compiling /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control/continuum_snake_postprocessing.py to continuum_snake_postprocessing.cpython-38.pyc
+byte-compiling /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control/__init__.py to __init__.cpython-38.pyc
+byte-compiling /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control/ros2_elastica_torque_force_params.py to ros2_elastica_torque_force_params.cpython-38.pyc
+byte-compiling /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control/continuum_flagella_ros2.py to continuum_flagella_ros2.cpython-38.pyc
+byte-compiling /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control/utils.py to utils.cpython-38.pyc
+running install_data
+creating /root/ros2_elastica_ws/install/elastica_sim_control/share/ament_index
+creating /root/ros2_elastica_ws/install/elastica_sim_control/share/ament_index/resource_index
+creating /root/ros2_elastica_ws/install/elastica_sim_control/share/ament_index/resource_index/packages
+copying resource/elastica_sim_control -> /root/ros2_elastica_ws/install/elastica_sim_control/share/ament_index/resource_index/packages
+copying package.xml -> /root/ros2_elastica_ws/install/elastica_sim_control/share/elastica_sim_control
+running install_egg_info
+Copying ../../build/elastica_sim_control/elastica_sim_control.egg-info to /root/ros2_elastica_ws/install/elastica_sim_control/lib/python3.8/site-packages/elastica_sim_control-0.1.1-py3.8.egg-info
+running install_scripts
+Installing continuum_flagella_ros2 script to /root/ros2_elastica_ws/install/elastica_sim_control/lib/elastica_sim_control
+Installing continuum_snake_ros2 script to /root/ros2_elastica_ws/install/elastica_sim_control/lib/elastica_sim_control
+writing list of installed files to '/root/ros2_elastica_ws/build/elastica_sim_control/install.log'

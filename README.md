@@ -11,7 +11,7 @@ Before running the below command, we have to allow client to connect to the serv
 
 After pulling the image, run an instance of the image (container) with the help of the following command:
 ```
-    sudo docker run --rm -it  --name ros2_elastica_pack -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro  ruffy369/ros2_elastica:v1.1
+    sudo docker run --rm -it  --name elastica_sim_control -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro  ruffy369/ros2_elastica:v1.1
 ```
 
 **Breaking down the above command:**
@@ -26,13 +26,13 @@ They can be executed with the help of the following commands:
 
 *Continuum Flagella Case*
 ```
-    cd ~/ros2_elastica_ws/src/ros2_elastica_pack/ros2_elastica_pack/examples/ContinuumFlagellaCase/
+    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumFlagellaCase/
     python3 continuum_flagella_ros2.py 
 ```
 
 *Continuum Snake Case*
 ```
-    cd ~/ros2_elastica_ws/src/ros2_elastica_pack/ros2_elastica_pack/examples/ContinuumSnakeCase/
+    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
     python3 continuum_snake_ros2.py 
 ```
 **Note:** *continuum_snake_ros2.py* script has wrong optimized coefficient values because of which the average velocities' values goes to *NaN*
@@ -42,7 +42,7 @@ To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for 
 *One can see the current ros topics being published with the help of the following command in a separate terminal:*
 
 ```
-    sudo docker exec -it ros2_elastica_pack bash
+    sudo docker exec -it elastica_sim_control bash
     ros2 topic list
 ```
 
@@ -50,13 +50,13 @@ To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for 
 
 *Continuum Flagella Case*
 ```
-    cd ~/ros2_elastica_ws/src/ros2_elastica_pack/ros2_elastica_pack/examples/ContinuumFlagellaCase/
+    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumFlagellaCase/
     python3 continuum_flagella.py 
 ```
 
 *Continuum Snake Case*
 ```
-    cd ~/ros2_elastica_ws/src/ros2_elastica_pack/ros2_elastica_pack/examples/ContinuumSnakeCase/
+    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
     python3 continuum_snake.py 
 ```
 

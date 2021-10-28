@@ -1,0 +1,12 @@
+Metadata-Version: 1.2
+Name: elastica-sim-control
+Version: 0.1.1
+Summary: ROS2 package for PyElastica simulator for simulating assemblies of Cosserat Rods
+Home-page: UNKNOWN
+Author: Prakarsh Kaushik
+Author-email: prakarshkaushik369@gmail.com
+Maintainer: Prakarsh Kaushik
+Maintainer-email: prakarshkaushik369@gmail.com
+License: MIT license
+Description: UNKNOWN
+Platform: UNKNOWN
