@@ -188,7 +188,7 @@ def run_snake(
                 velocity_z[:] = system.velocity_collection[2]
 
                 if current_step ==total_steps:
-                    pp_list_file = open("pp_list.dat", "wb")
+                    pp_list_file = open("continuum_snake.dat", "wb")
                     pickle.dump(pp_list_copy, pp_list_file)
                     pp_list_file.close()
 
@@ -251,7 +251,7 @@ def run_snake(
     if not p2.is_alive():
         p1.terminate()
 
-    pp_list_file = open("pp_list.dat", "rb")
+    pp_list_file = open("continuum_snake.dat", "rb")
     pp_list = pickle.load(pp_list_file)
 
     
@@ -266,10 +266,13 @@ def run_snake(
 
     if SAVE_RESULTS:
 
-        filename = "continuum_snake.dat"
-        file = open(filename, "wb")
-        pickle.dump(pp_list, file)
-        file.close()
+        pass
+    
+    else:
+        if os.path.exists("continuum_snake.dat"):
+            os.remove("continuum_snake.dat")
+        else:
+            print("The file does not exist")
 
     # Compute the average forward velocity. These will be used for optimization.
     [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, period)

@@ -164,7 +164,7 @@ def run_flagella(
                 
                 
                 if current_step ==total_steps:
-                    pp_list_file = open("pp_list.dat", "wb")
+                    pp_list_file = open("continuum_flagella.dat", "wb")
                     pickle.dump(pp_list_copy, pp_list_file)
                     pp_list_file.close()
 
@@ -227,7 +227,7 @@ def run_flagella(
     if not p2.is_alive():
         p1.terminate()
 
-    pp_list_file = open("pp_list.dat", "rb")
+    pp_list_file = open("continuum_flagella.dat", "rb")
     pp_list = pickle.load(pp_list_file)
     
 
@@ -242,10 +242,13 @@ def run_flagella(
 
     if SAVE_RESULTS:
 
-        filename = "continuum_flagella.dat"
-        file = open(filename, "wb")
-        pickle.dump(pp_list, file)
-        file.close()
+        pass
+    
+    else:
+        if os.path.exists("continuum_flagella.dat"):
+            os.remove("continuum_flagella.dat")
+        else:
+            print("The file does not exist")
 
     # Compute the average forward velocity. These will be used for optimization.
     [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, period)

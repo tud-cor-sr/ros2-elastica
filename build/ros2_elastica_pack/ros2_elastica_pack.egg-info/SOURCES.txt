@@ -11,6 +11,10 @@ setup.py
 resource/ros2_elastica_pack
 ros2_elastica_pack/Timoshenko_beam.py
 ros2_elastica_pack/__init__.py
+ros2_elastica_pack/continuum_flagella_postprocessing.py
+ros2_elastica_pack/continuum_flagella_ros2.py
+ros2_elastica_pack/continuum_snake_postprocessing.py
+ros2_elastica_pack/continuum_snake_ros2.py
 ros2_elastica_pack/publisher_member_function.py
 ros2_elastica_pack/ros2_elastica_torque_force_params.py
 ros2_elastica_pack/utils.py

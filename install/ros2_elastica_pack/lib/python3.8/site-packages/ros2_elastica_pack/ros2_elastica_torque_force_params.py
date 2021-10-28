@@ -11,9 +11,9 @@ class MinimalPublisherSubscriberForces(Node):
     def __init__(self,t_coeff_optimized ,period, wave_length, base_length, wave_number,phase_shift, rest_lengths, ramp_up_time_MuscleTorques,\
     direction_MuscleTorques, with_spline, muscle_torque_mag, force, direction_UniformForces, uniformforces_mag, torque, direction_UniformTorques, uniformtorques_mag, \
     start_force, end_force, ramp_up_time_EndpointForces, acc_gravity, dynamic_viscosity, start_force_mag, end_force_mag, ramp_up_time_EndpointForcesSinusoidal,\
-    tangent_direction, normal_direction):
+    tangent_direction, normal_direction, rod_tip_orientation, position_x, position_y, position_z, velocity_x,velocity_y,velocity_z,print_params):
         super().__init__('minimal_publisher_subscriber_forces')
-        self.print_params = int(input("Do you want to hear the current values of the parameters for MuscleTorques, UniformTorques, UniformForces, EndPointForces, SlenderBodyTheory(for flow-structure interaction problems), EndpointForcesSinusoidal (for testing) and the magnitude of MuscleTorques, UniformTorques, UniformForces? (Number '1' for Yes & number '0' for No)"))
+        self.print_params = print_params
         self.t_coeff_optimized  = t_coeff_optimized 
         self.period = period
         self.wave_length = wave_length
@@ -41,6 +41,13 @@ class MinimalPublisherSubscriberForces(Node):
         self.ramp_up_time_EndpointForcesSinusoidal = ramp_up_time_EndpointForcesSinusoidal
         self.tangent_direction = tangent_direction
         self.normal_direction = normal_direction
+        self.rod_tip_orientation = rod_tip_orientation
+        self.position_x = position_x
+        self.position_y = position_y
+        self.position_z = position_z
+        self.velocity_x = velocity_x
+        self.velocity_y = velocity_y
+        self.velocity_z = velocity_z
         
        
         self.publisher0 = self.create_publisher(Float64MultiArray, '/t_coeff_optimized', 10)
@@ -70,6 +77,13 @@ class MinimalPublisherSubscriberForces(Node):
         self.publisher24 = self.create_publisher(Float64MultiArray, '/normal_direction', 10)
         self.publisher25 = self.create_publisher(Float64MultiArray, '/uniformforces_mag', 10)
         self.publisher26 = self.create_publisher(Float64MultiArray, '/uniformtorques_mag', 10)
+        self.publisher27 = self.create_publisher(Float64MultiArray, '/rod_tip_orientation', 10)
+        self.publisher28 = self.create_publisher(Float64MultiArray, '/position_x', 10)
+        self.publisher29 = self.create_publisher(Float64MultiArray, '/position_y', 10)
+        self.publisher30 = self.create_publisher(Float64MultiArray, '/position_z', 10)
+        self.publisher31 = self.create_publisher(Float64MultiArray, '/velocity_x', 10)
+        self.publisher32 = self.create_publisher(Float64MultiArray, '/velocity_y', 10)
+        self.publisher33 = self.create_publisher(Float64MultiArray, '/velocity_z', 10)
         
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -101,6 +115,14 @@ class MinimalPublisherSubscriberForces(Node):
         self.subscription24 = self.create_subscription(Float64MultiArray,'/normal_direction',self.listener_callback_normal_direction,10)
         self.subscription25 = self.create_subscription(Float64MultiArray,'/uniformforces_mag',self.listener_callback_uniformforces_mag,10)
         self.subscription26 = self.create_subscription(Float64MultiArray,'/uniformtorques_mag',self.listener_callback_uniformtorques_mag,10)
+        self.subscription27 = self.create_subscription(Float64MultiArray,'/rod_tip_orientation',self.listener_callback_rod_tip_orientation,10)
+        self.subscription28 = self.create_subscription(Float64MultiArray,'/position_x',self.listener_callback_position_x,10)
+        self.subscription29 = self.create_subscription(Float64MultiArray,'/position_y',self.listener_callback_position_y,10)
+        self.subscription30 = self.create_subscription(Float64MultiArray,'/position_z',self.listener_callback_position_z,10)
+        self.subscription31 = self.create_subscription(Float64MultiArray,'/velocity_x',self.listener_callback_velocity_x,10)
+        self.subscription32 = self.create_subscription(Float64MultiArray,'/velocity_y',self.listener_callback_velocity_y,10)
+        self.subscription33 = self.create_subscription(Float64MultiArray,'/velocity_z',self.listener_callback_velocity_z,10)
+
         
         # prevent unused variable warning
         self.subscription0
@@ -130,6 +152,13 @@ class MinimalPublisherSubscriberForces(Node):
         self.subscription24
         self.subscription25
         self.subscription26
+        self.subscription27
+        self.subscription28
+        self.subscription29
+        self.subscription30
+        self.subscription31
+        self.subscription32
+        self.subscription33
 
 
     def timer_callback(self):
@@ -160,6 +189,13 @@ class MinimalPublisherSubscriberForces(Node):
         msg24 = Float64MultiArray()
         msg25 = Float64MultiArray()
         msg26 = Float64MultiArray()
+        msg27 = Float64MultiArray()
+        msg28 = Float64MultiArray()
+        msg29 = Float64MultiArray()
+        msg30 = Float64MultiArray()
+        msg31 = Float64MultiArray()
+        msg32 = Float64MultiArray()
+        msg33 = Float64MultiArray()
         msg0.data = self.t_coeff_optimized.tolist()
         msg1.data = self.period
         msg2.data = self.wave_length
@@ -187,6 +223,13 @@ class MinimalPublisherSubscriberForces(Node):
         msg24.data = self.normal_direction.tolist()
         msg25.data = np.squeeze(self.uniformforces_mag).tolist()
         msg26.data = np.squeeze(self.uniformtorques_mag).tolist()
+        msg27.data = np.squeeze(self.rod_tip_orientation).tolist()
+        msg28.data = np.squeeze(self.position_x).tolist()
+        msg29.data = np.squeeze(self.position_y).tolist()
+        msg30.data = np.squeeze(self.position_z).tolist()
+        msg31.data = np.squeeze(self.velocity_x).tolist()
+        msg32.data = np.squeeze(self.velocity_y).tolist()
+        msg33.data = np.squeeze(self.velocity_z).tolist()
         
         self.publisher0.publish(msg0)
         self.publisher1.publish(msg1)
@@ -215,88 +258,81 @@ class MinimalPublisherSubscriberForces(Node):
         self.publisher24.publish(msg24)
         self.publisher25.publish(msg25)
         self.publisher26.publish(msg26)
+        self.publisher27.publish(msg27)
+        self.publisher28.publish(msg28)
+        self.publisher29.publish(msg29)
+        self.publisher30.publish(msg30)
+        self.publisher31.publish(msg31)
+        self.publisher32.publish(msg32)
+        self.publisher33.publish(msg33)
 
     def listener_callback_t_coeff_optimized(self, msg):
-        if self.print_params:
-            print('I heard t_coeff_optimized:', msg.data)
+        if self.print_params: print('I heard t_coeff_optimized:', msg.data)
     def listener_callback_period(self, msg):
-        if self.print_params:
-            print('I heard period:', msg.data)
+        if self.print_params: print('I heard period:', msg.data)
     def listener_callback_wave_length(self, msg):
-        if self.print_params:    
-            print('I heard wave_length:', msg.data)
+        if self.print_params: print('I heard wave_length:', msg.data)
     def listener_callback_base_length(self, msg):
-        if self.print_params:
-            print('I heard base_length:', msg.data)
+        if self.print_params: print('I heard base_length:', msg.data)
     def listener_callback_wave_number(self, msg):
-        if self.print_params:
-            print('I heard wave_number:', msg.data)
+        if self.print_params: print('I heard wave_number:', msg.data)
     def listener_callback_phase_shift(self, msg):
-        if self.print_params:
-            print('I heard phase_shift:', msg.data)
+        if self.print_params: print('I heard phase_shift:', msg.data)
     def listener_callback_rest_lengths(self, msg):
-        if self.print_params:
-            print('I heard rest_lengths:', msg.data)
+        if self.print_params: print('I heard rest_lengths:', msg.data)
     def listener_callback_ramp_up_time_MuscleTorques(self, msg):
-        if self.print_params:
-            print('I heard ramp_up_time_MuscleTorques:', msg.data)
+        if self.print_params: print('I heard ramp_up_time_MuscleTorques:', msg.data)
     def listener_callback_direction_MuscleTorques(self, msg):
-        if self.print_params:
-            print('I heard direction_MuscleTorques:', msg.data)
+        if self.print_params: print('I heard direction_MuscleTorques:', msg.data)
     def listener_callback_with_spline(self, msg):
-        if self.print_params:    
-            print('I heard with_spline:', msg.data)
+        if self.print_params: print('I heard with_spline:', msg.data)
     def listener_callback_muscle_torque_mag(self, msg):
-        if self.print_params:
-            print('I heard muscle_torque_mag:', msg.data)
+        if self.print_params: print('I heard muscle_torque_mag:', msg.data)
     def listener_callback_force(self, msg):
-        if self.print_params:
-            print('I heard force:', msg.data)
+        if self.print_params: print('I heard force:', msg.data)
     def listener_callback_direction_UniformForces(self, msg):
-        if self.print_params:
-            print('I heard direction_UniformForces:', msg.data)
+        if self.print_params: print('I heard direction_UniformForces:', msg.data)
     def listener_callback_torque(self, msg):         
-        if self.print_params:
-            print('I heard torque:', msg.data)
+        if self.print_params: print('I heard torque:', msg.data)
     def listener_callback_direction_UniformTorques(self, msg):
-        if self.print_params:
-            print('I heard direction_UniformTorques:', msg.data)
+        if self.print_params: print('I heard direction_UniformTorques:', msg.data)
     def listener_callback_start_force(self, msg):
-        if self.print_params:
-            print('I heard start_force:', msg.data)
+        if self.print_params: print('I heard start_force:', msg.data)
     def listener_callback_end_force(self, msg):
-        if self.print_params:
-            print('I heard end_force:', msg.data)
+        if self.print_params: print('I heard end_force:', msg.data)
     def listener_callback_ramp_up_time_EndpointForces(self, msg):
-        if self.print_params:
-            print('I heard ramp_up_time_EndpointForces:', msg.data)
+        if self.print_params: print('I heard ramp_up_time_EndpointForces:', msg.data)
     def listener_callback_acc_gravity(self, msg):
-        if self.print_params:
-            print('I heard acc_gravity:', msg.data)
+        if self.print_params: print('I heard acc_gravity:', msg.data)
     def listener_callback_dynamic_viscosity(self, msg):  
-        if self.print_params:
-            print('I heard dynamic_viscosity:', msg.data)
+        if self.print_params: print('I heard dynamic_viscosity:', msg.data)
     def listener_callback_start_force_mag(self, msg):
-        if self.print_params:
-            print('I heard start_force_mag:', msg.data)
+        if self.print_params: print('I heard start_force_mag:', msg.data)
     def listener_callback_end_force_mag(self, msg):
-        if self.print_params:
-            print('I heard end_force_mag:', msg.data)
+        if self.print_params: print('I heard end_force_mag:', msg.data)
     def listener_callback_ramp_up_time_EndpointForcesSinusoidal(self, msg):
-        if self.print_params:
-            print('I heard ramp_up_time_EndpointForcesSinusoidal:', msg.data)
+        if self.print_params: print('I heard ramp_up_time_EndpointForcesSinusoidal:', msg.data)
     def listener_callback_tangent_direction(self, msg):
-        if self.print_params:
-            print('I heard tangent_direction:', msg.data)
+        if self.print_params: print('I heard tangent_direction:', msg.data)
     def listener_callback_normal_direction(self, msg):
-        if self.print_params:
-            print('I heard normal_direction:', msg.data)
+        if self.print_params: print('I heard normal_direction:', msg.data)
     def listener_callback_uniformforces_mag(self, msg):
-        if self.print_params:
-            print('I heard uniformforces_mag:', msg.data)
+        if self.print_params: print('I heard uniformforces_mag:', msg.data)
     def listener_callback_uniformtorques_mag(self, msg):
-        if self.print_params:
-            print('I heard uniformtorques_mag:', msg.data)
-        
+        if self.print_params: print('I heard uniformtorques_mag:', msg.data)
+    def listener_callback_rod_tip_orientation(self, msg):
+        if self.print_params: print('I heard rod_tip_orientation:', msg.data)
+    def listener_callback_position_x(self, msg):
+        if self.print_params: print('I heard position_x:', msg.data)
+    def listener_callback_position_y(self, msg):
+        if self.print_params: print('I heard position_y:', msg.data)
+    def listener_callback_position_z(self, msg):
+        if self.print_params: print('I heard position_z:', msg.data)
+    def listener_callback_velocity_x(self, msg):
+        if self.print_params: print('I heard velocity_x:', msg.data)
+    def listener_callback_velocity_y(self, msg):
+        if self.print_params: print('I heard velocity_y:', msg.data)
+    def listener_callback_velocity_z(self, msg):
+        if self.print_params: print('I heard velocity_z:', msg.data)
 
 #############################################################################
