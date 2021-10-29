@@ -207,8 +207,9 @@ def run_flagella(
         elastica_pub_sub = ElasticaPublisherSubscriber(sim_params, rod_state, print_params)
         rclpy.spin(elastica_pub_sub)
 
-    
+    #ROS2 Node
     p1 = mp.Process(target=ros_node)
+    #Starting the simulation
     p2 = mp.Process(target=integrate, args = (timestepper, flagella_sim, final_time, total_steps,))
   
     # starting process 1

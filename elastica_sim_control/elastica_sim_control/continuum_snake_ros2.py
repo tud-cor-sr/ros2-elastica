@@ -232,8 +232,9 @@ def run_snake(
         rclpy.spin(elastica_pub_sub)
 
         
-
+    #ROS2 Node
     p1 = mp.Process(target=ros_node)
+    #Starting the simulation
     p2 = mp.Process(target=integrate, args = (timestepper, snake_sim, final_time, total_steps,))
 
     # starting process 1
