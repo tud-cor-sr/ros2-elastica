@@ -1,3 +1,6 @@
+__doc__ = """
+Includes utility functions for calculation of applied force & torque magnitudes on the cosserat rods simulated
+"""
 import numpy as np
 
     

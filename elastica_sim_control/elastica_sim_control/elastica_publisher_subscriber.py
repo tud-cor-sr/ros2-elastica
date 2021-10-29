@@ -1,3 +1,7 @@
+__doc__ = """
+For creating publishers & subscribers of ros topics for various simulation parameters, applied force & torque magnitudes 
+& state space of cosserat rods simulated
+"""
 import numpy as np
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
