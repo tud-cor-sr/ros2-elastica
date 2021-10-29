@@ -18,10 +18,10 @@ from elastica_sim_control.continuum_snake_postprocessing import (
     compute_projected_velocity,
 )
 
-# sys.path.append("../../ros2_elastica_torque_force_params")
+# sys.path.append("../../elastica_publisher_subscriber")
 # sys.path.append("../../utils")
 
-from elastica_sim_control.ros2_elastica_torque_force_params import *
+from elastica_sim_control.elastica_publisher_subscriber import *
 from elastica_sim_control.utils import *
 
 rod_state = defaultdict(list)
@@ -228,8 +228,8 @@ def run_snake(
     def ros_node():
         rclpy.init(args=None)
         
-        minimal_publisher_subcriber = MinimalPublisherSubscriberForces(sim_params, rod_state,print_params)
-        rclpy.spin(minimal_publisher_subcriber)
+        elastica_pub_sub = ElasticaPublisherSubscriber(sim_params, rod_state,print_params)
+        rclpy.spin(elastica_pub_sub)
 
         
 

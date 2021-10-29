@@ -6,10 +6,10 @@ from std_msgs.msg import Bool
 
 
 ##########ROS2######################################################
-class MinimalPublisherSubscriberForces(Node):
+class ElasticaPublisherSubscriber(Node):
     
     def __init__(self, sim_params, rod_state, print_params):
-        super().__init__('minimal_publisher_subscriber_forces')
+        super().__init__('elastica_pub_sub')
         self.print_params = print_params
         self.t_coeff_optimized  = sim_params["t_coeff_optimized"] 
         self.period = sim_params["period"]
