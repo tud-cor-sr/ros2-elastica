@@ -1,8 +1,10 @@
+**Note:** This is the ROS2 package involving python3 scripts for simulating the *Cosserat rods* in PyElastica with information being exchanged on ros topics. Down below are the instructions for running the whole package separately in a docker container which can virtually run in any environment, which make it easy to deploy & test this application. Also with instructions to build the package on a local env or in a different docker container other than the below.
+
 # Instructions for pulling the ros2_elastica image and running the container & python3 scripts
 
 The current image works Linux kernel. First of all if you don't have the image then Pull the current distribution of Docker Image with the following command (all the development & testing is done on Ubuntu 18.04):
 ```
-    sudo docker pull ruffy369/ros2_elastica:v1.1
+    sudo docker pull ruffy369/ros2_elastica:latest
 ```
 Before running the below command, we have to allow client to connect to the server by running the following command in a separate terminal (it can be done after running the container as well but needed to be done before running the script where you want to use matplotlib or some other GUI based application inside the container):
 ```
@@ -11,7 +13,7 @@ Before running the below command, we have to allow client to connect to the serv
 
 After pulling the image, run an instance of the image (container) with the help of the following command:
 ```
-    sudo docker run --rm -it  --name elastica_sim_control -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro  ruffy369/ros2_elastica:v1.1
+    sudo docker run --rm -it  --name elastica_sim_control -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro  ruffy369/ros2_elastica:latest
 ```
 
 **Breaking down the above command:**
@@ -24,20 +26,29 @@ After pulling the image, run an instance of the image (container) with the help 
 
 They can be executed with the help of the following commands:
 
-*Continuum Flagella Case*
+*Continuum Flagella Case (run as a python script)*
 ```
     cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumFlagellaCase/
     python3 continuum_flagella_ros2.py 
 ```
+*Continuum Flagella Case (run as a executable ros2 node)*
+```
+    ros2 run elastica_sim_control continuum_flagella_ros2 
 
-*Continuum Snake Case*
+```
+*Continuum Snake Case (run as a python script)*
 ```
     cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
     python3 continuum_snake_ros2.py 
 ```
+*Continuum Snake Case (run as a executable ros2 node)*
+```
+    ros2 run elastica_sim_control continuum_snake_ros2 
+
+```
 **Note:** *continuum_snake_ros2.py* script has wrong optimized coefficient values because of which the average velocities' values goes to *NaN*
 
-To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for closing & removing the running container after stoppin the python script
+To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for closing & removing the running container after stopping the python script
 
 *One can see the current ros topics being published with the help of the following command in a separate terminal:*
 
@@ -46,7 +57,7 @@ To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for 
     ros2 topic list
 ```
 
-**If one want to run the scripts from their local system instead of on a docker container, kindly run the following scripts which are provided by Pyelastica by default:**
+**If one wants to run the scripts from their local system without a ros interface, kindly run the following scripts which are provided by Pyelastica by default:**
 
 *Continuum Flagella Case*
 ```
@@ -58,6 +69,35 @@ To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for 
 ```
     cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
     python3 continuum_snake.py 
+```
+
+# Instructions for building the ROS2 package (either on a docker container or a local env)
+
+## Source & Return to the root of your workspace:
+```
+source /opt/ros/$ROS_DISTRO/setup.bash
+cd /path/to/ros2_ws
+```
+
+## Build & source the workspace
+```
+colcon build --packages-select elastica_sim_control
+source install/local_setup.bash
+
+```
+
+## Run (same ros commands as above)
+
+*Continuum Flagella Case*
+```
+    ros2 run elastica_sim_control continuum_flagella_ros2 
+
+```
+
+*Continuum Snake Case*
+```
+    ros2 run elastica_sim_control continuum_snake_ros2 
+
 ```
 
 **Here is the description of all the ros topics being published. Most of them are the parameters which decide the magnitude of the MuscleTorque, UniformTorques, UniformForces, EndPointForces, EndPointForcesSinusoidal which can be applied to each element of Cosserat rod simulated.**
