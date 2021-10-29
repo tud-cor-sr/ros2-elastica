@@ -8,46 +8,43 @@ from std_msgs.msg import Bool
 ##########ROS2######################################################
 class MinimalPublisherSubscriberForces(Node):
     
-    def __init__(self,t_coeff_optimized ,period, wave_length, base_length, wave_number,phase_shift, rest_lengths, ramp_up_time_MuscleTorques,\
-    direction_MuscleTorques, with_spline, muscle_torque_mag, force, direction_UniformForces, uniformforces_mag, torque, direction_UniformTorques, uniformtorques_mag, \
-    start_force, end_force, ramp_up_time_EndpointForces, acc_gravity, dynamic_viscosity, start_force_mag, end_force_mag, ramp_up_time_EndpointForcesSinusoidal,\
-    tangent_direction, normal_direction, rod_tip_orientation, position_x, position_y, position_z, velocity_x,velocity_y,velocity_z,print_params):
+    def __init__(self, sim_params, rod_state, print_params):
         super().__init__('minimal_publisher_subscriber_forces')
         self.print_params = print_params
-        self.t_coeff_optimized  = t_coeff_optimized 
-        self.period = period
-        self.wave_length = wave_length
-        self.base_length = base_length
-        self.wave_number = wave_number
-        self.phase_shift = phase_shift
-        self.rest_lengths = rest_lengths
-        self.ramp_up_time_MuscleTorques = ramp_up_time_MuscleTorques
-        self.direction_MuscleTorques = direction_MuscleTorques
-        self.with_spline = with_spline
-        self.muscle_torque_mag = muscle_torque_mag
-        self.force = force
-        self.direction_UniformForces = direction_UniformForces
-        self.uniformforces_mag = uniformforces_mag
-        self.torque = torque
-        self.direction_UniformTorques = direction_UniformTorques
-        self.uniformtorques_mag = uniformtorques_mag
-        self.start_force = start_force
-        self.end_force = end_force
-        self.ramp_up_time_EndpointForces = ramp_up_time_EndpointForces
-        self.acc_gravity = acc_gravity
-        self.dynamic_viscosity = dynamic_viscosity
-        self.start_force_mag = start_force_mag
-        self.end_force_mag = end_force_mag
-        self.ramp_up_time_EndpointForcesSinusoidal = ramp_up_time_EndpointForcesSinusoidal
-        self.tangent_direction = tangent_direction
-        self.normal_direction = normal_direction
-        self.rod_tip_orientation = rod_tip_orientation
-        self.position_x = position_x
-        self.position_y = position_y
-        self.position_z = position_z
-        self.velocity_x = velocity_x
-        self.velocity_y = velocity_y
-        self.velocity_z = velocity_z
+        self.t_coeff_optimized  = sim_params["t_coeff_optimized"] 
+        self.period = sim_params["period"]
+        self.wave_length = sim_params["wave_length"]
+        self.base_length = sim_params["base_length"]
+        self.wave_number = sim_params["wave_number"]
+        self.phase_shift = sim_params["phase_shift"]
+        self.rest_lengths = sim_params["rest_lengths"]
+        self.ramp_up_time_MuscleTorques = sim_params["ramp_up_time_MuscleTorques"]
+        self.direction_MuscleTorques = sim_params["direction_MuscleTorques"]
+        self.with_spline = sim_params["with_spline"]
+        self.muscle_torque_mag = sim_params["muscle_torque_mag"]
+        self.force = sim_params["force"]
+        self.direction_UniformForces = sim_params["direction_UniformForces"]
+        self.uniformforces_mag = sim_params["uniformforces_mag"]
+        self.torque = sim_params["torque"]
+        self.direction_UniformTorques = sim_params["direction_UniformTorques"]
+        self.uniformtorques_mag = sim_params["uniformtorques_mag"]
+        self.start_force = sim_params["start_force"]
+        self.end_force = sim_params["end_force"]
+        self.ramp_up_time_EndpointForces = sim_params["ramp_up_time_EndpointForces"]
+        self.acc_gravity = sim_params["acc_gravity"]
+        self.dynamic_viscosity = sim_params["dynamic_viscosity"]
+        self.start_force_mag = sim_params["start_force_mag"]
+        self.end_force_mag = sim_params["end_force_mag"]
+        self.ramp_up_time_EndpointForcesSinusoidal = sim_params["ramp_up_time_EndpointForcesSinusoidal"]
+        self.tangent_direction = sim_params["tangent_direction"]
+        self.normal_direction = sim_params["normal_direction"]
+        self.rod_tip_orientation = rod_state["rod_tip_orientation"]
+        self.position_x = rod_state["position_x"]
+        self.position_y = rod_state["position_y"]
+        self.position_z = rod_state["position_z"]
+        self.velocity_x = rod_state["velocity_x"]
+        self.velocity_y = rod_state["velocity_y"]
+        self.velocity_z = rod_state["velocity_z"]
         
        
         self.publisher0 = self.create_publisher(Float64MultiArray, '/t_coeff_optimized', 10)

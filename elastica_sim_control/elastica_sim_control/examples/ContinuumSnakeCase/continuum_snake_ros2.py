@@ -24,15 +24,16 @@ sys.path.append("../../utils")
 from ros2_elastica_torque_force_params import *
 from utils import *
 
-rod_tip_orientation = mp.Array('d', 4) #Quaternion form
+rod_state = defaultdict(list)
+rod_state["rod_tip_orientation"] = mp.Array('d', 4) #Quaternion form
 
 # The array is of size 51 according to 'number of elements for Cosserat rod + 1'
-position_x = mp.Array('d',51)    
-position_y = mp.Array('d',51)
-position_z = mp.Array('d',51)
-velocity_x = mp.Array('d',51)
-velocity_y = mp.Array('d',51)
-velocity_z = mp.Array('d',51)
+rod_state["position_x"] = mp.Array('d',51)    
+rod_state["position_y"] = mp.Array('d',51)
+rod_state["position_z"] = mp.Array('d',51)
+rod_state["velocity_x"] = mp.Array('d',51)
+rod_state["velocity_y"] = mp.Array('d',51)
+rod_state["velocity_z"] = mp.Array('d',51)
 print_params = int(input("Enter '1' for printing the subscriber callback parameters' values and '0' for otherwise \n"))
 
 
@@ -46,116 +47,120 @@ def run_snake(
     b_coeff, PLOT_FIGURE=False, SAVE_FIGURE=False, SAVE_VIDEO=False, SAVE_RESULTS=False
 ):
     
-    t_coeff_optimized = b_coeff
+    sim_params = defaultdict(list)
+    
+    sim_params["b_coeff"] = b_coeff
+    sim_params["t_coeff_optimized"] = b_coeff
 
     snake_sim = SnakeSimulator()
     
 
     # setting up test params
-    n_elem = 50
-    start = np.zeros((3,))
-    direction_MuscleTorques = np.array([0.0, 0.0, 1.0])
-    normal = np.array([0.0, 1.0, 0.0])
-    base_length = 1.0
-    base_radius = 0.025
-    density = 1000
-    nu = 5.0
-    E = 1e7
-    poisson_ratio = 0.5
+    sim_params["n_elem"] = 50
+    sim_params["start"] = np.zeros((3,))
+    sim_params["direction_MuscleTorques"] = np.array([0.0, 0.0, 1.0])
+    sim_params["normal"] = np.array([0.0, 1.0, 0.0])
+    sim_params["base_length"] = 1.0
+    sim_params["base_radius"] = 0.025
+    sim_params["density"] = 1000
+    sim_params["nu"] = 5.0
+    sim_params["E"] = 1e7
+    sim_params["poisson_ratio"] = 0.5
     
     
 
 
     shearable_rod = CosseratRod.straight_rod(
-        n_elem,
-        start,
-        direction_MuscleTorques,
-        normal,
-        base_length,
-        base_radius,
-        density,
-        nu,
-        E,
-        poisson_ratio,
+        sim_params["n_elem"],
+        sim_params["start"],
+        sim_params["direction_MuscleTorques"],
+        sim_params["normal"],
+        sim_params["base_length"],
+        sim_params["base_radius"],
+        sim_params["density"],
+        sim_params["nu"],
+        sim_params["E"],
+        sim_params["poisson_ratio"],
     )
 
     snake_sim.append(shearable_rod)
 
     # Add gravitational forces
-    gravitational_acc = -9.80665
+    sim_params["gravitational_acc"] = -9.80665
     snake_sim.add_forcing_to(shearable_rod).using(
-        GravityForces, acc_gravity=np.array([0.0, gravitational_acc, 0.0])
+        GravityForces, acc_gravity=np.array([0.0, sim_params["gravitational_acc"], 0.0])
     )
-    period = 1.0
-    wave_length = b_coeff[-1]
-    wave_number=2.0 * np.pi / (wave_length)
-    phase_shift=0.0
-    rest_lengths=shearable_rod.rest_lengths
-    ramp_up_time_MuscleTorques=period
-    with_spline=True
-    my_spline = np.ones(np.cumsum(shearable_rod.rest_lengths).shape)
-    time = 1.0
-    angular_frequency = 2.0 * np.pi / period
-    factor = min(1.0, time / period)
-    force = 0.0
-    direction_UniformForces = np.array([0.0, 0.0, 0.0])
-    torque = 0.0
-    direction_UniformTorques = np.array([0.0, 0.0, 0.0]) 
-    start_force =  np.array([0.0, 0.0, 0.0])
-    end_force =  np.array([0.0, 0.0, 0.0])
-    ramp_up_time_EndpointForces = 0.0
-    acc_gravity =  np.array([0.0, 0.0, 0.0])
-    dynamic_viscosity = 0.0 
-    start_force_mag =  0.0
-    end_force_mag =  0.0
-    ramp_up_time_EndpointForcesSinusoidal = 0.0
-    tangent_direction = np.array([0.0, 0.0, 0.0])
-    normal_direction = np.array([0.0, 0.0, 0.0])
+    sim_params["period"] = 1.0
+    sim_params["wave_length"] = sim_params["b_coeff"][-1]
+    sim_params["wave_number"]=2.0 * np.pi / (sim_params["wave_length"])
+    sim_params["phase_shift"]=0.0
+    sim_params["rest_lengths"]=shearable_rod.rest_lengths
+    sim_params["ramp_up_time_MuscleTorques"]=sim_params["period"]
+    sim_params["with_spline"]=True
+    sim_params["my_spline"] = np.ones(np.cumsum(shearable_rod.rest_lengths).shape)
+    sim_params["time"] = 1.0
+    sim_params["angular_frequency"] = 2.0 * np.pi / sim_params["period"]
+    sim_params["factor"] = min(1.0, sim_params["time"] / sim_params["period"])
+    sim_params["force"] = 0.0
+    sim_params["direction_UniformForces"] = np.array([0.0, 0.0, 0.0])
+    sim_params["torque"] = 0.0
+    sim_params["direction_UniformTorques"] = np.array([0.0, 0.0, 0.0]) 
+    sim_params["start_force"] =  np.array([0.0, 0.0, 0.0])
+    sim_params["end_force"] =  np.array([0.0, 0.0, 0.0])
+    sim_params["ramp_up_time_EndpointForces"] = 0.0
+    sim_params["acc_gravity"] =  np.array([0.0, 0.0, 0.0])
+    sim_params["dynamic_viscosity"] = 0.0 
+    sim_params["start_force_mag"] =  0.0
+    sim_params["end_force_mag"] =  0.0
+    sim_params["ramp_up_time_EndpointForcesSinusoidal"] = 0.0
+    sim_params["tangent_direction"] = np.array([0.0, 0.0, 0.0])
+    sim_params["normal_direction"] = np.array([0.0, 0.0, 0.0])
     
-    muscle_torque_mag = muscle_torque_mag_cal(factor, my_spline, angular_frequency, time, wave_length, rest_lengths)
-    uniformforces_mag = uniformforces_mag_cal(force,direction_UniformForces, n_elem)
-    uniformtorques_mag = uniformtorques_mag_cal(torque, direction_UniformTorques, n_elem)
+    sim_params["muscle_torque_mag"] = muscle_torque_mag_cal(sim_params["factor"], sim_params["my_spline"], sim_params["angular_frequency"], sim_params["time"], sim_params["wave_length"], sim_params["rest_lengths"])
+    sim_params["uniformforces_mag"] = uniformforces_mag_cal(sim_params["force"],sim_params["direction_UniformForces"], sim_params["n_elem"])
+    sim_params["uniformtorques_mag"] = uniformtorques_mag_cal(sim_params["torque"], sim_params["direction_UniformTorques"], sim_params["n_elem"])
+    
 
    
     
     
     snake_sim.add_forcing_to(shearable_rod).using(
         MuscleTorques,
-        base_length= base_length ,
-        b_coeff=b_coeff[:-1],
-        period=period,
-        wave_number = wave_number,
-        phase_shift=phase_shift,
-        rest_lengths= rest_lengths,
-        ramp_up_time=ramp_up_time_MuscleTorques,
-        direction=direction_MuscleTorques,
-        with_spline=with_spline,
+        base_length= sim_params["base_length"] ,
+        b_coeff=sim_params["b_coeff"][:-1],
+        period=sim_params["period"],
+        wave_number = sim_params["wave_number"],
+        phase_shift=sim_params["phase_shift"],
+        rest_lengths= sim_params["rest_lengths"],
+        ramp_up_time=sim_params["ramp_up_time_MuscleTorques"],
+        direction=sim_params["direction_MuscleTorques"],
+        with_spline=sim_params["with_spline"],
     )
     
     
     # Add friction forces
-    origin_plane = np.array([0.0, -base_radius, 0.0])
-    normal_plane = normal
-    slip_velocity_tol = 1e-8
-    froude = 0.1
-    mu = base_length / (period * period * np.abs(gravitational_acc) * froude)
+    sim_params["origin_plane"] = np.array([0.0, -sim_params["base_radius"], 0.0])
+    sim_params["normal_plane"] = sim_params["normal"]
+    sim_params["slip_velocity_tol"] = 1e-8
+    sim_params["froude"] = 0.1
+    sim_params["mu"] = sim_params["base_length"] / (sim_params["period"] * sim_params["period"] * np.abs(sim_params["gravitational_acc"]) * sim_params["froude"])
     kinetic_mu_array = np.array(
-        [mu, 1.5 * mu, 2.0 * mu]
+        [sim_params["mu"], 1.5 * sim_params["mu"], 2.0 * sim_params["mu"]]
     )  # [forward, backward, sideways]
     static_mu_array = 2 * kinetic_mu_array
     snake_sim.add_forcing_to(shearable_rod).using(
         AnisotropicFrictionalPlane,
         k=1.0,
         nu=1e-6,
-        plane_origin=origin_plane,
-        plane_normal=normal_plane,
-        slip_velocity_tol=slip_velocity_tol,
+        plane_origin=sim_params["origin_plane"],
+        plane_normal=sim_params["normal_plane"],
+        slip_velocity_tol=sim_params["slip_velocity_tol"],
         static_mu_array=static_mu_array,
         kinetic_mu_array=kinetic_mu_array,
     )
 
-    final_time = (11.0 + 0.01) * period
-    dt = 1.0e-3 * period
+    final_time = (11.0 + 0.01) * sim_params["period"]
+    dt = 1.0e-3 * sim_params["period"]
     total_steps = int(final_time / dt)
 
     # Add call backs
@@ -178,13 +183,13 @@ def run_snake(
                 qx = (Q[2, 1] - Q[1, 2]) / (4 * qw)
                 qy = (Q[0, 2] - Q[2, 0]) / (4 * qw)
                 qz = (Q[1, 0] - Q[0, 1]) / (4 * qw)
-                rod_tip_orientation[:] = [qw, qx, qy, qz]
-                position_x[:] = system.position_collection[0]
-                position_y[:] = system.position_collection[1]
-                position_z[:] = system.position_collection[2]
-                velocity_x[:] = system.velocity_collection[0]
-                velocity_y[:] = system.velocity_collection[1]
-                velocity_z[:] = system.velocity_collection[2]
+                rod_state["rod_tip_orientation"][:] = [qw, qx, qy, qz]
+                rod_state["position_x"][:] = system.position_collection[0]
+                rod_state["position_y"][:] = system.position_collection[1]
+                rod_state["position_z"][:] = system.position_collection[2]
+                rod_state["velocity_x"][:] = system.velocity_collection[0]
+                rod_state["velocity_y"][:] = system.velocity_collection[1]
+                rod_state["velocity_z"][:] = system.velocity_collection[2]
 
                 if current_step ==total_steps:
                     pp_list_file = open("continuum_flagella.dat", "wb")
@@ -225,12 +230,7 @@ def run_snake(
     def ros_node():
         rclpy.init(args=None)
         
-        minimal_publisher_subcriber = MinimalPublisherSubscriberForces(t_coeff_optimized ,period, wave_length, base_length, wave_number,phase_shift, 
-                                    rest_lengths, ramp_up_time_MuscleTorques,direction_MuscleTorques, with_spline, muscle_torque_mag, force, 
-                                    direction_UniformForces, uniformforces_mag, torque, direction_UniformTorques, uniformtorques_mag, start_force,
-                                    end_force, ramp_up_time_EndpointForces, acc_gravity, dynamic_viscosity, start_force_mag, end_force_mag, 
-                                    ramp_up_time_EndpointForcesSinusoidal, tangent_direction, normal_direction, rod_tip_orientation, position_x, 
-                                    position_y, position_z, velocity_x,velocity_y,velocity_z,print_params)
+        minimal_publisher_subcriber = MinimalPublisherSubscriberForces(sim_params, rod_state,print_params)
         rclpy.spin(minimal_publisher_subcriber)
 
         
@@ -255,7 +255,7 @@ def run_snake(
 
     if PLOT_FIGURE:
         filename_plot = "continuum_snake_velocity.png"
-        plot_snake_velocity(pp_list, period, filename_plot, SAVE_FIGURE)
+        plot_snake_velocity(pp_list, sim_params["period"], filename_plot, SAVE_FIGURE)
 
         if SAVE_VIDEO:
             filename_video = "continuum_snake.mp4"
@@ -272,7 +272,7 @@ def run_snake(
             print("The file does not exist")
 
     # Compute the average forward velocity. These will be used for optimization.
-    [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, period)
+    [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, sim_params["period"])
 
     return avg_forward, avg_lateral, pp_list
 
