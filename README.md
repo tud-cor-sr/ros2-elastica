@@ -124,7 +124,7 @@ source install/local_setup.bash
 
 ```/base_length``` Rest length of the rod-like object (float). (*class*)
 
-```/direction_MuscleTorques``` array 1D (dim) array containing data with 'float' type. Muscle torque direction. (*class MuscleTorques*)
+```/direction_of_rod_extension``` array 1D (dim) array containing data with 'float' type. direction in which rod extends (also the Muscle torque direction). 
 
 ```/direction_UniformForces``` array1D (dim) array containing data with 'float' type. Direction in which force applied. (*class UniformForces*)
 

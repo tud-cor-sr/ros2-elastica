@@ -1,0 +1,38 @@
+# Custom Message to set physical parameters for the cosserat rods
+
+std_msgs/Header header 
+
+std_msgs/Float64MultiArray t_coeff_optimized
+float64 period
+float64 wave_length
+float64 base_length
+float64 wave_number
+float64 phase_shift
+std_msgs/Float64MultiArray rest_lengths
+float64 ramp_up_time_muscle_torques
+bool with_spline
+std_msgs/Float64MultiArray muscle_torque_mag
+float64 force
+float64 torque
+float64 ramp_up_time_endpoint_forces
+float64 dynamic_viscosity
+float64 start_force_mag
+float64 end_force_mag
+float64 ramp_up_time_endpoint_forces_sinusoidal
+std_msgs/Float64MultiArray uniformforces_mag
+std_msgs/Float64MultiArray uniformtorques_mag
+
+geometry_msgs/Vector3 direction_of_rod_extension
+geometry_msgs/Vector3 direction_uniform_forces
+geometry_msgs/Vector3 direction_uniform_torques
+geometry_msgs/Vector3 tangent_direction
+geometry_msgs/Vector3 normal_direction
+
+geometry_msgs/Wrench start_force
+geometry_msgs/Wrench end_force
+
+geometry_msgs/Accel acc_gravity
+
+geometry_msgs/Quaternion rod_tip_orientation
+
+

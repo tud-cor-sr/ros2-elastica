@@ -58,7 +58,7 @@ def run_snake(
     # setting up test params
     sim_params["n_elem"] = 50
     sim_params["start"] = np.zeros((3,))
-    sim_params["direction_MuscleTorques"] = np.array([0.0, 0.0, 1.0])
+    sim_params["direction_of_rod_extension"] = np.array([0.0, 0.0, 1.0])
     sim_params["normal"] = np.array([0.0, 1.0, 0.0])
     sim_params["base_length"] = 1.0
     sim_params["base_radius"] = 0.025
@@ -73,7 +73,7 @@ def run_snake(
     shearable_rod = CosseratRod.straight_rod(
         sim_params["n_elem"],
         sim_params["start"],
-        sim_params["direction_MuscleTorques"],
+        sim_params["direction_of_rod_extension"],
         sim_params["normal"],
         sim_params["base_length"],
         sim_params["base_radius"],
@@ -133,7 +133,7 @@ def run_snake(
         phase_shift=sim_params["phase_shift"],
         rest_lengths= sim_params["rest_lengths"],
         ramp_up_time=sim_params["ramp_up_time_MuscleTorques"],
-        direction=sim_params["direction_MuscleTorques"],
+        direction=sim_params["normal"],
         with_spline=sim_params["with_spline"],
     )
     
