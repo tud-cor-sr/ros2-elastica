@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'pyelastica', 'matplotlib', 'numpy', 'moviepy', 'ffmpeg'],
     zip_safe=True,
     author='Prakarsh Kaushik',
     author_email='prakarshkaushik369@gmail.com',
