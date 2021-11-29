@@ -2,11 +2,10 @@
 
 std_msgs/Header header 
 
-std_msgs/Float64MultiArray t_coeff_optimized
+std_msgs/Float64MultiArray b_coeff
 float64 period
 float64 wave_length
 float64 base_length
-float64 wave_number
 float64 phase_shift
 std_msgs/Float64MultiArray rest_lengths
 float64 ramp_up_time_muscle_torques
