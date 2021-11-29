@@ -7,10 +7,23 @@ from rclpy.node import Node
 from elastica_msgs.msg import *
 
 
+def sampleControlPoints(number_of_control_points):
+    """
+    Sample usable random control point values.
+    Returns
+    -------
+    numpy.ndarray
+        1D (3 * number_of_control_points,) array containing data with 'float' type, in range [-1, 1].
+    """
+    random_control_points = []
+    random_control_points[:] = ((np.random.rand(3 * number_of_control_points) - 0.5) * 2)
+            
+    return random_control_points
+
 ##########ROS2######################################################
 class ElasticaPublisherSubscriber(Node):
     
-    def __init__(self, sim_params, rod_state, print_params):
+    def __init__(self, sim_params, rod_state, print_params, time_tracker, control_input):
         super().__init__('elastica_pub_sub')
         self.print_params = print_params
         self.sim_params = sim_params
@@ -19,31 +32,34 @@ class ElasticaPublisherSubscriber(Node):
 
         self.physical_params = PhysicalParams()
         self.rod_state_msg = RodState()
+        self.control_input_msg = ControlInput()
 
         self.publisher0 = self.create_publisher(PhysicalParams, '/physical_params', 10)
         self.publisher1 = self.create_publisher(RodState, '/rod_state', 10)
-       
+        self.publisher2  =  self.create_publisher(ControlInput, '/control_input', 10)
+        self.control_input = control_input
+        self.time_tracker = time_tracker
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         self.subscription0 = self.create_subscription(PhysicalParams,'/physical_params',self.listener_callback_physical_params,10)
         self.subscription1 = self.create_subscription(RodState,'/rod_state',self.listener_callback_rod_state,10)
+        self.subscription2 = self.create_subscription(ControlInput,'/control_input',self.listener_callback_control_input,10)
         
         # prevent unused variable warning
         self.subscription0
         self.subscription1
+        self.subscription2
         
 
 
     def timer_callback(self):
         
-        
-        print("chec", self.rod_state)
-        self.physical_params.t_coeff_optimized.data  = self.sim_params["t_coeff_optimized"].tolist()
+ 
+        self.physical_params.b_coeff.data  = self.sim_params["b_coeff"].tolist()
         self.physical_params.period = self.sim_params["period"]
         self.physical_params.wave_length = self.sim_params["wave_length"]
         self.physical_params.base_length = self.sim_params["base_length"]
-        self.physical_params.wave_number = self.sim_params["wave_number"]
         self.physical_params.phase_shift = self.sim_params["phase_shift"]
         self.physical_params.rest_lengths.data = self.sim_params["rest_lengths"].tolist()
         self.physical_params.ramp_up_time_muscle_torques = self.sim_params["ramp_up_time_MuscleTorques"]
@@ -92,21 +108,33 @@ class ElasticaPublisherSubscriber(Node):
         self.rod_state_msg.velocity_x.data = np.squeeze(self.rod_state["velocity_x"]).tolist()
         self.rod_state_msg.velocity_y.data = np.squeeze(self.rod_state["velocity_y"]).tolist()
         self.rod_state_msg.velocity_z.data = np.squeeze(self.rod_state["velocity_z"]).tolist()
-            
+        
+        self.control_input_msg.control_points.data =  np.squeeze(self.control_input["control_points"]).tolist()
         
         self.publisher0.publish(self.physical_params)
         self.publisher1.publish(self.rod_state_msg)
+        self.publisher2.publish(self.control_input_msg)
         
 
     def listener_callback_physical_params(self, msg):
         if self.print_params: print('I heard rod tip orientation:', [msg.rod_tip_orientation.w,msg.rod_tip_orientation.x,msg.rod_tip_orientation.y,msg.rod_tip_orientation.z])
     def listener_callback_rod_state(self, msg):
         if self.print_params: 
-            print("I heard rod_state's position_y:", msg.position_z)
+            print("I heard rod_state's position_y:", msg.position_x)
             print("I heard rod_state's position_y:", msg.position_y)
             print("I heard rod_state's position_z:", msg.position_z)
             print("I heard rod_state's velocity_x:", msg.velocity_x)
             print("I heard rod_state's velocity_y:", msg.velocity_y)
             print("I heard rod_state's velocity_z:", msg.velocity_z)
+    def listener_callback_control_input(self, msg):
+        print("I heard control points", msg.control_points)
+        
+        if int(self.time_tracker.value) % 3 == 0 and self.count ==0 and (self.time_tracker.value)>3.0 :
+                self.control_input["control_points"][:] = sampleControlPoints(6)
+                self.count = 1
+                print ("CHANGING CONTROL")
+        if self.count==1 and self.time_tracker.value % 3>2.9:
+                self.count =0
+        
     
 #############################################################################

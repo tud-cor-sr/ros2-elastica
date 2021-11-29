@@ -3,11 +3,11 @@ __all__ = ["MuscleTorquesWithVaryingBetaSplines"]
 from elastica import IMPORT_NUMBA
 
 if IMPORT_NUMBA:
-    from elastica_sim_control.muscle_torques_with_bspline_numba import (
+    from examples.ContinuumSnakeCase.muscle_torques_with_bspline_numba import (
         MuscleTorquesWithVaryingBetaSplines,
     )
 
 else:
-    from elastica_sim_control.muscle_torques_with_bspline_numpy import (
+    from examples.ContinuumSnakeCase.muscle_torques_with_bspline_numpy import (
         MuscleTorquesWithVaryingBetaSplines,
     )

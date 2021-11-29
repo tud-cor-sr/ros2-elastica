@@ -2,11 +2,13 @@ __doc__ = """Continuum flagella example, for detailed explanation refer to Gazzo
 section 5.2.1 """
 
 import numpy as np
-import sys
 import rclpy
 import multiprocessing as mp
 import time as T
 import pickle
+from elastica.timestepper import extend_stepper_interface
+from elastica._calculus import _isnan_check
+from tqdm import tqdm
 
 # FIXME without appending sys.path make it more generic
 # sys.path.append("../../")
@@ -18,13 +20,21 @@ from elastica_sim_control.continuum_flagella_postprocessing import (
     compute_projected_velocity,
 )
 
+#you can choose a different number of control points or torque scaling factor by changing the number_of_control_points and alpha
+from elastica_sim_control import MuscleTorquesWithVaryingBetaSplines
+
 # sys.path.append("../../elastica_publisher_subscriber")
 # sys.path.append("../../utils")
 
 from elastica_sim_control.elastica_publisher_subscriber import *
 from elastica_sim_control.utils import *
 
+
 rod_state = defaultdict(list)
+
+control_input = defaultdict(list)
+control_input["control_points"]  = mp.Array('d', 18)
+
 rod_state["rod_tip_orientation"] = mp.Array('d', 4) #Quaternion form
 
 # The array is of size 51 according to 'number of elements for Cosserat rod + 1'
@@ -34,183 +44,250 @@ rod_state["position_z"] = mp.Array('d',51)
 rod_state["velocity_x"] = mp.Array('d',51)
 rod_state["velocity_y"] = mp.Array('d',51)
 rod_state["velocity_z"] = mp.Array('d',51)
+
 print_params = int(input("Enter '1' for printing the subscriber callback parameters' values and '0' for otherwise \n"))
+
+
 
 class FlagellaSimulator(BaseSystemCollection, Constraints, Forcing, CallBacks):
     pass
 
+class DefineFlagella():
+    def __init__(self,b_coeff):
+        self.sim_params = defaultdict(list)
+        
+        self.StatefulStepper = PositionVerlet()
+        self.sim_params["period"] = 1.0
+        self.sim_params["b_coeff"] = b_coeff
+        self.sim_params["wave_length"] = b_coeff[-1]
+        self.sim_params["number_of_control_points"] = 6
+        self.sim_params["alpha"] = 75
+        
+        self.sim_params["final_time"] = (10.0 + 0.01) * self.sim_params["period"]
+        self.sim_params["dt"] = 2.5e-5 * self.sim_params["period"]
+        self.sim_params["total_steps"] = int(self.sim_params["final_time"] / self.sim_params["dt"])
+        
+        rendering_fps = 60
+        self.sim_params["time_step"] = np.float64(float(self.sim_params["final_time"]) / self.sim_params["total_steps"])
+        self.sim_params["step_skip"] = int(1.0 / (rendering_fps * self.sim_params["time_step"]))
+        self.sim_params["max_rate_of_change_of_activation"] = np.infty
+        
+        self.flagella_sim = FlagellaSimulator()
+         # setting up test params
+        self.sim_params["n_elem"] = 50
+        self.sim_params["NU"] = 5.0 # dissipation coefficient
+        self.sim_params["E"] = 1e7  # Young's Modulus
+        self.sim_params["start"] = np.zeros((3,))
+        self.sim_params["direction_of_rod_extension"] = np.array([0.0, 1.0, 0.0])  # rod direction: pointing upwards
+        self.sim_params["normal"] = np.array([0.0, 0.0, 1.0])
 
-def run_flagella(
-    b_coeff, PLOT_FIGURE=False, SAVE_FIGURE=False, SAVE_VIDEO=False, SAVE_RESULTS=False
-):
-    sim_params = defaultdict(list)
-    
-    sim_params["b_coeff"] = b_coeff
-    sim_params["t_coeff_optimized"] = b_coeff
+        self.sim_params["density"] = 1000
+        self.sim_params["poisson_ratio"] = 0.5
 
-    flagella_sim = FlagellaSimulator()
+        self.sim_params["base_length"] = 1.0  # rod base length
+        self.sim_params["radius_tip"] = 0.05  # radius of the rod at the tip
+        self.sim_params["radius_base"] = 0.05  # radius of the rod at the base
 
-    # setting up test params
-    sim_params["n_elem"] = 50
-    sim_params["start"] = np.zeros((3,))
-    sim_params["direction_of_rod_extension"] = np.array([0.0, 0.0, 1.0])
-    sim_params["normal"] = np.array([0.0, 1.0, 0.0])
-    sim_params["base_length"] = 1.0
-    sim_params["base_radius"] = 0.025
-    sim_params["density"] = 1000
-    sim_params["nu"] = 5.0
-    sim_params["E"] = 1e7
-    sim_params["poisson_ratio"] = 0.5
+        self.sim_params["radius_along_rod"] = np.linspace(self.sim_params["radius_base"], self.sim_params["radius_tip"], self.sim_params["n_elem"])
 
-    shearable_rod = CosseratRod.straight_rod(
-        sim_params["n_elem"],
-        sim_params["start"],
-        sim_params["direction_of_rod_extension"],
-        sim_params["normal"],
-        sim_params["base_length"],
-        sim_params["base_radius"],
-        sim_params["density"],
-        sim_params["nu"],
-        sim_params["E"],
-        sim_params["poisson_ratio"],
-    )
+        self.shearable_rod = CosseratRod.straight_rod(
+            self.sim_params["n_elem"],
+            self.sim_params["start"],
+            self.sim_params["direction_of_rod_extension"],
+            self.sim_params["normal"],
+            self.sim_params["base_length"],
+            base_radius=self.sim_params["radius_along_rod"],
+            density=self.sim_params["density"],
+            nu= self.sim_params["NU"],
+            youngs_modulus= self.sim_params["E"],
+            poisson_ratio=self.sim_params["poisson_ratio"],
+        )
+        self.flagella_sim.append(self.shearable_rod)
+        
+        self.torque_profile_list_for_muscle_in_normal_dir = defaultdict(list)
+        self.control_points_array_normal_dir = []
+        # Apply torques
+        self.flagella_sim.add_forcing_to(self.shearable_rod).using(
+            MuscleTorquesWithVaryingBetaSplines,
+            base_length=self.sim_params["base_length"],
+            number_of_control_points=self.sim_params["number_of_control_points"],
+            points_func_array=self.control_points_array_normal_dir,
+            muscle_torque_scale=self.sim_params["alpha"],
+            direction=str("normal"),
+            step_skip=self.sim_params["step_skip"],
+            max_rate_of_change_of_activation=self.sim_params["max_rate_of_change_of_activation"],
+            torque_profile_recorder=self.torque_profile_list_for_muscle_in_normal_dir,
+        )
+        
+        self.sim_params["phase_shift"] = 0.0
+        self.sim_params["ramp_up_time_MuscleTorques"]=self.sim_params["period"]
+        self.sim_params["rest_lengths"]=self.shearable_rod.rest_lengths
+        self.sim_params["with_spline"]=True
+        self.sim_params["ramp_up_time_EndpointForces"] = 0.0
+        self.sim_params["ramp_up_time_EndpointForcesSinusoidal"] = 0.0
+        
+        my_spline = np.ones(np.cumsum(self.shearable_rod.rest_lengths).shape)
+        time = 1.0
+        angular_frequency = 2.0 * np.pi / self.sim_params["period"]
+        factor = min(1.0, time / self.sim_params["period"])
+        self.sim_params["force"] = 0.0
+        self.sim_params["direction_UniformForces"] = np.array([0.0, 0.0, 0.0])
+        self.sim_params["torque"] = 0.0
+        self.sim_params["direction_UniformTorques"] = np.array([0.0, 0.0, 0.0]) 
+        self.sim_params["start_force"] =  np.array([0.0, 0.0, 0.0])
+        self.sim_params["end_force"] =  np.array([0.0, 0.0, 0.0])
+        self.sim_params["ramp_up_time_EndpointForces"] = 0.0
+        self.sim_params["acc_gravity"] =  np.array([0.0, 0.0, 0.0])
+        self.sim_params["start_force_mag"] =  0.0
+        self.sim_params["end_force_mag"] =  0.0
+        self.sim_params["ramp_up_time_EndpointForcesSinusoidal"] = 0.0
+        self.sim_params["tangent_direction"] = np.array([0.0, 0.0, 0.0])
+        self.sim_params["normal_direction"] = np.array([0.0, 0.0, 0.0])
+        
+        self.sim_params["muscle_torque_mag"] = muscle_torque_mag_cal(factor, my_spline, angular_frequency, time, self.sim_params["wave_length"], self.sim_params["rest_lengths"])
+        self.sim_params["uniformforces_mag"] = uniformforces_mag_cal(self.sim_params["force"],self.sim_params["direction_UniformForces"], self.sim_params["n_elem"])
+        self.sim_params["uniformtorques_mag"] = uniformtorques_mag_cal(self.sim_params["torque"], self.sim_params["direction_UniformTorques"], self.sim_params["n_elem"])
+        
+        # Add slender body forces
+        fluid_density = 1.0
+        reynolds_number = 1e-4
+        self.sim_params["dynamic_viscosity"] = (
+            fluid_density * self.sim_params["base_length"] * self.sim_params["base_length"] / (self.sim_params["period"] * reynolds_number)
+        )
+        self.flagella_sim.add_forcing_to(self.shearable_rod).using(
+            SlenderBodyTheory, dynamic_viscosity=self.sim_params["dynamic_viscosity"]
+        )
+        
+        self.time_tracker = mp.Value('d', 0.0)
+        
+        # Add call backs
+        class ContinuumFlagellaCallBack(CallBackBaseClass):
+            """
+            Call back function for continuum snake
+            """
 
-    flagella_sim.append(shearable_rod)
-
-    sim_params["period"] = 1.0
-    sim_params["wave_length"] = sim_params["b_coeff"][-1]
-    flagella_sim.add_forcing_to(shearable_rod).using(
-        MuscleTorques,
-        base_length=sim_params["base_length"],
-        b_coeff=sim_params["b_coeff"][:-1],
-        period=sim_params["period"],
-        wave_number=2.0 * np.pi / (sim_params["wave_length"]),
-        phase_shift=0.0,
-        rest_lengths=shearable_rod.rest_lengths,
-        ramp_up_time=sim_params["period"],
-        direction=sim_params["normal"],
-        with_spline=True,
-    )
-    
-    sim_params["wave_number"]=2.0 * np.pi / (sim_params["wave_length"])
-    sim_params["phase_shift"]=0.0
-    sim_params["rest_lengths"]=shearable_rod.rest_lengths
-    sim_params["ramp_up_time_MuscleTorques"]=sim_params["period"]
-    sim_params["with_spline"]=True
-    my_spline = np.ones(np.cumsum(shearable_rod.rest_lengths).shape)
-    time = 1.0
-    angular_frequency = 2.0 * np.pi / sim_params["period"]
-    factor = min(1.0, time / sim_params["period"])
-    sim_params["force"] = 0.0
-    sim_params["direction_UniformForces"] = np.array([0.0, 0.0, 0.0])
-    sim_params["torque"] = 0.0
-    sim_params["direction_UniformTorques"] = np.array([0.0, 0.0, 0.0]) 
-    sim_params["start_force"] =  np.array([0.0, 0.0, 0.0])
-    sim_params["end_force"] =  np.array([0.0, 0.0, 0.0])
-    sim_params["ramp_up_time_EndpointForces"] = 0.0
-    sim_params["acc_gravity"] =  np.array([0.0, 0.0, 0.0])
-    sim_params["start_force_mag"] =  0.0
-    sim_params["end_force_mag"] =  0.0
-    sim_params["ramp_up_time_EndpointForcesSinusoidal"] = 0.0
-    sim_params["tangent_direction"] = np.array([0.0, 0.0, 0.0])
-    sim_params["normal_direction"] = np.array([0.0, 0.0, 0.0])
-    
-    sim_params["muscle_torque_mag"] = muscle_torque_mag_cal(factor, my_spline, angular_frequency, time, sim_params["wave_length"], sim_params["rest_lengths"])
-    sim_params["uniformforces_mag"] = uniformforces_mag_cal(sim_params["force"],sim_params["direction_UniformForces"], sim_params["n_elem"])
-    sim_params["uniformtorques_mag"] = uniformtorques_mag_cal(sim_params["torque"], sim_params["direction_UniformTorques"], sim_params["n_elem"])
-    
-    
-
-    # Add slender body forces
-    fluid_density = 1.0
-    reynolds_number = 1e-4
-    sim_params["dynamic_viscosity"] = (
-        fluid_density * sim_params["base_length"] * sim_params["base_length"] / (sim_params["period"] * reynolds_number)
-    )
-    flagella_sim.add_forcing_to(shearable_rod).using(
-        SlenderBodyTheory, dynamic_viscosity=sim_params["dynamic_viscosity"]
-    )
-    final_time = (10.0 + 0.01) * sim_params["period"]
-    dt = 2.5e-5 * sim_params["period"]
-    total_steps = int(final_time / dt)
-
-    # Add call backs
-    class ContinuumFlagellaCallBack(CallBackBaseClass):
-        """
-        Call back function for continuum snake
-        """
-
-        def __init__(self, step_skip: int, callback_params: dict):
-            CallBackBaseClass.__init__(self)
-            self.every = step_skip
-            self.callback_params = callback_params
-            self.pp_list_copy = defaultdict(list)
+            def __init__(self, step_skip: int, callback_params: dict):
+                CallBackBaseClass.__init__(self)
+                self.every = step_skip
+                self.callback_params = callback_params
+                self.pp_list_copy = defaultdict(list)
 
 
-        def make_callback(self, system, time, current_step: int):
+            def make_callback(self, system, time, current_step: int):
             
-            if current_step % self.every == 0:
-                Q = system.director_collection[..., -1]
-                qw = np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2
-                qx = (Q[2, 1] - Q[1, 2]) / (4 * qw)
-                qy = (Q[0, 2] - Q[2, 0]) / (4 * qw)
-                qz = (Q[1, 0] - Q[0, 1]) / (4 * qw)
-                rod_state["rod_tip_orientation"][:] = [qw, qx, qy, qz]
-                rod_state["position_x"][:] = system.position_collection[0]
-                rod_state["position_y"][:] = system.position_collection[1]
-                rod_state["position_z"][:] = system.position_collection[2]
-                rod_state["velocity_x"][:] = system.velocity_collection[0]
-                rod_state["velocity_y"][:] = system.velocity_collection[1]
-                rod_state["velocity_z"][:] = system.velocity_collection[2]
-                
-                
-                if current_step ==total_steps:
-                    pp_list_file = open("continuum_flagella.dat", "wb")
-                    pickle.dump(self.pp_list_copy, pp_list_file)
-                    pp_list_file.close()
+                if current_step % self.every == 0:
+                    Q = system.director_collection[..., -1]
+                    qw = np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2
+                    qx = (Q[2, 1] - Q[1, 2]) / (4 * qw)
+                    qy = (Q[0, 2] - Q[2, 0]) / (4 * qw)
+                    qz = (Q[1, 0] - Q[0, 1]) / (4 * qw)
+                    rod_state["rod_tip_orientation"][:] = [qw, qx, qy, qz]
+                    rod_state["position_x"][:] = system.position_collection[0]
+                    rod_state["position_y"][:] = system.position_collection[1]
+                    rod_state["position_z"][:] = system.position_collection[2]
+                    rod_state["velocity_x"][:] = system.velocity_collection[0]
+                    rod_state["velocity_y"][:] = system.velocity_collection[1]
+                    rod_state["velocity_z"][:] = system.velocity_collection[2]
+                    
+                    
+                    
+                    if time >= 10.0:
+                        pp_list_file = open("continuum_flagella.dat", "wb")
+                        pickle.dump(self.pp_list_copy, pp_list_file)
+                        pp_list_file.close()
 
-                self.pp_list_copy["time"].append(time)
-                self.pp_list_copy["step"].append(current_step)
-                self.pp_list_copy["position"].append(
-                    system.position_collection.copy()
-                )
-                self.pp_list_copy["velocity"].append(
-                    system.velocity_collection.copy()
-                )
-                self.pp_list_copy["avg_velocity"].append(
-                    system.compute_velocity_center_of_mass()
-                )
-                self.pp_list_copy["center_of_mass"].append(
-                    system.compute_position_center_of_mass()
-                )
+                    self.pp_list_copy["time"].append(time)
+                    self.pp_list_copy["step"].append(current_step)
+                    self.pp_list_copy["position"].append(
+                        system.position_collection.copy()
+                    )
+                    self.pp_list_copy["velocity"].append(
+                        system.velocity_collection.copy()
+                    )
+                    self.pp_list_copy["avg_velocity"].append(
+                        system.compute_velocity_center_of_mass()
+                    )
+                    self.pp_list_copy["center_of_mass"].append(
+                        system.compute_position_center_of_mass()
+                    )
 
-                return
+                    return
+        
+                        
+        self.pp_list = defaultdict(list)
+        self.flagella_sim.collect_diagnostics(self.shearable_rod).using(
+            ContinuumFlagellaCallBack, step_skip=200, callback_params=self.pp_list
+        )
+        self.flagella_sim.finalize()
+        # do_step, stages_and_updates will be used in step function
+        self.do_step, self.stages_and_updates = extend_stepper_interface(
+                                self.StatefulStepper,self.flagella_sim
+                            )
+        
+        
+        
+        
+    def time_stepping(self, control_input):
+        
+        self.control_points_array_normal_dir[:] = control_input[
+                : self.sim_params["number_of_control_points"]
+            ]
+        
+        
+        self.time_tracker.value = self.do_step(
+            self.StatefulStepper,
+            self.stages_and_updates,
+            self.flagella_sim,
+            self.time_tracker.value,
+            self.sim_params["time_step"],
+            )
+        done = False
+        if self.time_tracker.value> 10.01:
+            done =True
+        
+        # Checking for NaN positon of the rod. If so, stop the simulation
+        invalid_values_condition = _isnan_check(self.shearable_rod.position_collection)
 
-    pp_list = defaultdict(list)
+        if invalid_values_condition == True:
+            print(" NaN detected, will exit the simulation")
+            self.shearable_rod.position_collection = np.zeros(
+                self.shearable_rod.position_collection.shape
+            )
+            done = True
+        return done
+
+
+control_input["control_points"][:] = ((np.random.rand(3 * 6) - 0.5) * 2)
+
+            
+def run_flagella(
+         b_coeff,PLOT_FIGURE=False, SAVE_FIGURE=False, SAVE_VIDEO=False, SAVE_RESULTS=False
+    ):
+
+    flagella_run = DefineFlagella(b_coeff)
     
     
-
-    flagella_sim.collect_diagnostics(shearable_rod).using(
-        ContinuumFlagellaCallBack, step_skip=200, callback_params=pp_list
-    )
-
-    flagella_sim.finalize()
-    timestepper = PositionVerlet()
-    # timestepper = PEFRL()
-
+    print("Total steps", flagella_run.sim_params["total_steps"])
     
-    
-    print("Total steps", total_steps)
+    def flagella_stepping():
+        done = False
+        
+        for i in tqdm(range(flagella_run.sim_params["total_steps"])):
+            done = flagella_run.time_stepping(control_input["control_points"][:])
+            if done:
+                break
+        
     def ros_node():
         rclpy.init(args=None)
         
-        elastica_pub_sub = ElasticaPublisherSubscriber(sim_params, rod_state, print_params)
+        elastica_pub_sub = ElasticaPublisherSubscriber(flagella_run.sim_params, rod_state, print_params,flagella_run.time_tracker,control_input)
         rclpy.spin(elastica_pub_sub)
+        
 
     #ROS2 Node
     p1 = mp.Process(target=ros_node)
     #Starting the simulation
-    p2 = mp.Process(target=integrate, args = (timestepper, flagella_sim, final_time, total_steps,))
+    p2 = mp.Process(target=flagella_stepping)
   
     # starting process 1
     p1.start()
@@ -221,17 +298,13 @@ def run_flagella(
     p2.join()
     if not p2.is_alive():
         p1.terminate()
-
+    
     pp_list_file = open("continuum_flagella.dat", "rb")
     pp_list = pickle.load(pp_list_file)
     
-    
-    
-
-
     if PLOT_FIGURE:
         filename_plot = "continuum_flagella_velocity.png"
-        plot_velocity(pp_list, sim_params["period"], filename_plot, SAVE_FIGURE)
+        plot_velocity(pp_list, flagella_run.sim_params["period"], filename_plot, SAVE_FIGURE)
 
         if SAVE_VIDEO:
             filename_video = "continuum_flagella.mp4"
@@ -245,17 +318,14 @@ def run_flagella(
             os.remove("continuum_flagella.dat")
         else:
             print("The file does not exist")
-        
-        
 
-    # Compute the average forward velocity. These will be used for optimization.
-    [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, sim_params["period"])
+        # Compute the average forward velocity. These will be used for optimization.
+    [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, flagella_run.sim_params["period"])
 
     return avg_forward, avg_lateral, pp_list
 
+    
 def main():
-
-
     # Options
     PLOT_FIGURE = True
     SAVE_FIGURE = False
@@ -269,8 +339,7 @@ def main():
         SAVE_OPTIMIZED_COEFFICIENTS = False
 
         def optimize_snake(spline_coefficient):
-            [avg_forward, _, _] = run_flagella(
-                spline_coefficient,
+            [avg_forward, _, _] = run_flagella(spline_coefficient,
                 PLOT_FIGURE=False,
                 SAVE_FIGURE=False,
                 SAVE_VIDEO=False,
@@ -304,23 +373,11 @@ def main():
 
         # run the simulation
         [avg_forward, avg_lateral, pp_list] = run_flagella(
-            t_coeff_optimized, PLOT_FIGURE, SAVE_FIGURE, SAVE_VIDEO, SAVE_RESULTS
+            t_coeff_optimized,PLOT_FIGURE, SAVE_FIGURE, SAVE_VIDEO, SAVE_RESULTS
         )
 
         print("average forward velocity:", avg_forward)
         print("average forward lateral:", avg_lateral)
-    
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    # minimal_publisher_subcriber.destroy_node()
-        
-        
-        
-    # rclpy.shutdown()
-
-
-
 
 if __name__ == "__main__":
     
