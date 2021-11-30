@@ -7,25 +7,21 @@ from rclpy.node import Node
 from elastica_msgs.msg import *
 
 
-def sampleControlPoints(number_of_control_points):
-    """
-    Sample usable random control point values.
-    Returns
-    -------
-    numpy.ndarray
-        1D (3 * number_of_control_points,) array containing data with 'float' type, in range [-1, 1].
-    """
-    random_control_points = []
-    random_control_points[:] = ((np.random.rand(3 * number_of_control_points) - 0.5) * 2)
-            
-    return random_control_points
+
 
 ##########ROS2######################################################
 class ElasticaPublisherSubscriber(Node):
     
-    def __init__(self, sim_params, rod_state, print_params, time_tracker, control_input):
+    def __init__(self, sim_params, rod_state, time_tracker, control_input):
         super().__init__('elastica_pub_sub')
-        self.print_params = print_params
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('queue_size', None),
+                ('print_params', None)
+            ])
+        self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
+        self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
         self.sim_params = sim_params
         self.rod_state = rod_state
         self.count = 0
@@ -34,24 +30,35 @@ class ElasticaPublisherSubscriber(Node):
         self.rod_state_msg = RodState()
         self.control_input_msg = ControlInput()
 
-        self.publisher0 = self.create_publisher(PhysicalParams, '/physical_params', 10)
-        self.publisher1 = self.create_publisher(RodState, '/rod_state', 10)
-        self.publisher2  =  self.create_publisher(ControlInput, '/control_input', 10)
+        self.publisher0 = self.create_publisher(PhysicalParams, '/physical_params', self.queue_size)
+        self.publisher1 = self.create_publisher(RodState, '/rod_state', self.queue_size)
+        self.publisher2  =  self.create_publisher(ControlInput, '/control_input', self.queue_size)
         self.control_input = control_input
         self.time_tracker = time_tracker
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
-        self.subscription0 = self.create_subscription(PhysicalParams,'/physical_params',self.listener_callback_physical_params,10)
-        self.subscription1 = self.create_subscription(RodState,'/rod_state',self.listener_callback_rod_state,10)
-        self.subscription2 = self.create_subscription(ControlInput,'/control_input',self.listener_callback_control_input,10)
+        self.subscription0 = self.create_subscription(PhysicalParams,'/physical_params',self.listener_callback_physical_params,self.queue_size)
+        self.subscription1 = self.create_subscription(RodState,'/rod_state',self.listener_callback_rod_state,self.queue_size)
+        self.subscription2 = self.create_subscription(ControlInput,'/control_input',self.listener_callback_control_input,self.queue_size)
         
         # prevent unused variable warning
         self.subscription0
         self.subscription1
         self.subscription2
         
-
+    def sampleControlPoints(self,number_of_control_points):
+        """
+        Sample usable random control point values.
+        Returns
+        -------
+        numpy.ndarray
+            1D (3 * number_of_control_points,) array containing data with 'float' type, in range [-1, 1].
+        """
+        random_control_points = []
+        random_control_points[:] = ((np.random.rand(3 * number_of_control_points) - 0.5) * 2)
+                
+        return random_control_points
 
     def timer_callback(self):
         
@@ -127,10 +134,11 @@ class ElasticaPublisherSubscriber(Node):
             print("I heard rod_state's velocity_y:", msg.velocity_y)
             print("I heard rod_state's velocity_z:", msg.velocity_z)
     def listener_callback_control_input(self, msg):
-        print("I heard control points", msg.control_points)
+        if self.print_params: 
+            print("I heard control points", msg.control_points)
         
         if int(self.time_tracker.value) % 3 == 0 and self.count ==0 and (self.time_tracker.value)>3.0 :
-                self.control_input["control_points"][:] = sampleControlPoints(6)
+                self.control_input["control_points"][:] = self.sampleControlPoints(6)
                 self.count = 1
                 print ("CHANGING CONTROL")
         if self.count==1 and self.time_tracker.value % 3>2.9:

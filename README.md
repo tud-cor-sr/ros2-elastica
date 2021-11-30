@@ -1,106 +1,98 @@
-**Note:** This is the ROS2 package involving python3 scripts for simulating the *Cosserat rods* in PyElastica with information being exchanged on ros topics. Down below are the instructions for running the whole package separately in a docker container which can virtually run in any environment, which make it easy to deploy & test this application. Also with instructions to build the package on a local env or in a different docker container other than the below.
+# ROS2 Elastica
+Note: This is the ROS2 package involving python3 scripts for simulating the *Cosserat rods* in PyElastica with information being exchanged on ros topics. Down below are the instructions for running the whole package separately in a docker container which can virtually run in any environment, which make it easy to deploy & test this application. Also with instructions to build the package on a local env or in a different docker container other than the below.
 
-# Instructions for pulling the ros2_elastica image and running the container & python3 scripts
+## Instructions for pulling the sr-ros2-elastica image and running the container & python3 scripts
 
-The current image works Linux kernel. First of all if you don't have the image then Pull the current distribution of Docker Image with the following command (all the development & testing is done on Ubuntu 18.04):
-```
-    sudo docker pull ruffy369/ros2_elastica:latest
-```
+Here is the link to our [repository](https://github.com/tud-cor-sr/sr-ros2-bundles) containing ROS2 Docker images including Elastica ROS2 package for simulation of *Cosserat Rods*.
+Clone the repo & follow the instructions mentioned in README to get the *sr-ros2-elastica* container running
+
 Before running the below command, we have to allow client to connect to the server by running the following command in a separate terminal (it can be done after running the container as well but needed to be done before running the script where you want to use matplotlib or some other GUI based application inside the container):
 ```
     xhost +
 ```
-
-After pulling the image, run an instance of the image (container) with the help of the following command:
-```
-    sudo docker run --rm -it  --name elastica_sim_control -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro  ruffy369/ros2_elastica:latest
-```
-
-**Breaking down the above command:**
-
-*```-e DISPLAY=$DISPLAY```*  sends an environment variable to set the display of the server
-
-*```-v /tmp/.X11-unix:/tmp/.X11-unix:ro```* mounts X11 socket inside the container in read-only mode (just to be on a safer side)
-
-* When the above command had taken you to the bash terminal then you can start executing the python scripts inside the container to simulate the cosserat rods. There are two scripts modified for simulating a 'continuum snake' & a 'continuum flagella' while publishing the parameters (for different torques & forces on each element of Cosserat rod simulated) on their respective ros topics throught spinning a ROS2 node.
+When the above cloning, building & composing had taken you to the bash terminal then you can start executing the python scripts inside the container to simulate the cosserat rods. There are two scripts modified for simulating a 'continuum snake' & a 'continuum flagella' while publishing the parameters (for different torques & forces on each element of Cosserat rod simulated) on their respective ros topics & subscribing to the control input (control points for beta spline) throught spinning a ROS2 node.
 
 They can be executed with the help of the following commands:
 
-*Continuum Flagella Case (run as a python script)*
+*Continuum Flagella Case (run with a launch file)*
 ```
-    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumFlagellaCase/
-    python3 continuum_flagella_ros2.py 
+    ros2 launch elastica_sim_control continuum_flagella_ros2.launch.py
 ```
-*Continuum Flagella Case (run as a executable ros2 node)*
-```
-    ros2 run elastica_sim_control continuum_flagella_ros2 
+*Continuum Flagella Case (run as a executable ros2 node)* 
 
+parameter 'queue_size' is the size of the outgoing message queue used for asynchronous publishing & 'print_params' is for printing the subscriber callback parameters ('1' for printing the subscriber callback parameters' values and '0' for otherwise)
 ```
-*Continuum Snake Case (run as a python script)*
+    ros2 run elastica_sim_control continuum_flagella_ros2 --ros-args -p queue_size:=10 -p print_params:=1
 ```
-    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
-    python3 continuum_snake_ros2.py 
+*Continuum Snake Case (run with a launch file)*
+```
+    ros2 launch elastica_sim_control continuum_snake_ros2.launch.py
 ```
 *Continuum Snake Case (run as a executable ros2 node)*
 ```
-    ros2 run elastica_sim_control continuum_snake_ros2 
-
+    ros2 run elastica_sim_control continuum_snake_ros2 --ros-args -p queue_size:=10 -p print_params:=1
 ```
-**Note:** *continuum_snake_ros2.py* script has wrong optimized coefficient values because of which the average velocities' values goes to *NaN*
+Note: In *continuum_snake_ros2.py* script, the average velocities' values sometimes goes to *NaN* due to wrong beta coefficient values which exits the simulation
 
 To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for closing & removing the running container after stopping the python script
 
 *One can see the current ros topics being published with the help of the following command in a separate terminal:*
 
 ```
-    sudo docker exec -it elastica_sim_control bash
+    sudo docker exec -it <CONTAINER> bash
     ros2 topic list
 ```
 
-**If one wants to run the scripts from their local system without a ros interface, kindly run the following scripts which are provided by Pyelastica by default:**
+If one wants to run the scripts from their local system without a ros interface, kindly run the following scripts:
 
 *Continuum Flagella Case*
 ```
-    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumFlagellaCase/
+    cd ~/path/to/ros2-elastica/elastica_sim_control/elastica_sim_control/examples/ContinuumFlagellaCase/
     python3 continuum_flagella.py 
 ```
 
 *Continuum Snake Case*
 ```
-    cd ~/ros2_elastica_ws/src/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
+    cd ~/path/to/ros2-elastica/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
     python3 continuum_snake.py 
 ```
 
-# Instructions for building the ROS2 package (either on a docker container or a local env)
+## Instructions for building the ROS2 Elastica package (either on a docker container or a local env)
 
-## Source & Return to the root of your workspace:
+### Source & Return to the root of your workspace:
 ```
 source /opt/ros/$ROS_DISTRO/setup.bash
 cd /path/to/ros2_ws
 ```
 
-## Build & source the workspace
+### Build & source the workspace
 ```
 colcon build --packages-select elastica_sim_control
 source install/local_setup.bash
-
 ```
 
-## Run (same ros commands as above)
+### Run (same ros commands as above)
 
-*Continuum Flagella Case*
+*Continuum Flagella Case (run with a launch file)*
 ```
-    ros2 run elastica_sim_control continuum_flagella_ros2 
+    ros2 launch elastica_sim_control continuum_flagella_ros2.launch.py
+```
+*Continuum Flagella Case (run as a executable ros2 node)* 
 
+parameter 'queue_size' is the size of the outgoing message queue used for asynchronous publishing & 'print_params' is for printing the subscriber callback parameters ('1' for printing the subscriber callback parameters' values and '0' for otherwise)
+```
+    ros2 run elastica_sim_control continuum_flagella_ros2 --ros-args -p queue_size:=10 -p print_params:=1
+```
+*Continuum Snake Case (run with a launch file)*
+```
+    ros2 launch elastica_sim_control continuum_snake_ros2.launch.py
+```
+*Continuum Snake Case (run as a executable ros2 node)*
+```
+    ros2 run elastica_sim_control continuum_snake_ros2 --ros-args -p queue_size:=10 -p print_params:=1
 ```
 
-*Continuum Snake Case*
-```
-    ros2 run elastica_sim_control continuum_snake_ros2 
-
-```
-
-**Here is the description of all the ros topics being published. Most of them are the parameters which decide the magnitude of the MuscleTorque, UniformTorques, UniformForces, EndPointForces, EndPointForcesSinusoidal which can be applied to each element of Cosserat rod simulated.**
+Here is the description of all the ros topics being published. Most of them are the parameters which decide the magnitude of the MuscleTorque, UniformTorques, UniformForces, EndPointForces, EndPointForcesSinusoidal which can be applied to each element of Cosserat rod simulated.
 
 *Before giving the description first lets see the different types or classes of external forces which can be applied to the rod:*
 
@@ -118,76 +110,78 @@ source install/local_setup.bash
 
 ```SlenderBodyTheory``` This slender body theory class is for flow-structure interaction problems. This class applies hydrodynamic forces on the body using the slender body theory given in Eq. 4.13 of Gazzola et al. RSoS (2018).
 
-*So, lets continue with the description of the ros topics*
+*So, lets continue with the description values in the ros topics namely /physical_params, /rod_state, /control_input*
 
-```/acc_gravity``` array 1D (dim) array containing data with 'float' type. Gravitational acceleration vector. (*class GravityForces*)
+```/acc_gravity``` array 1D (dim) array containing data with 'float' type. Gravitational acceleration vector. (*class GravityForces*) /physical_params
 
-```/base_length``` Rest length of the rod-like object (float). (*class*)
+```/base_length``` Rest length of the rod-like object (float). (*class*) /physical_params
 
-```/direction_of_rod_extension``` array 1D (dim) array containing data with 'float' type. direction in which rod extends (also the Muscle torque direction). 
+```/b_coeff``` optimized coefficients for a snake gait (*class MuscleTorques*) /physical_params
 
-```/direction_UniformForces``` array1D (dim) array containing data with 'float' type. Direction in which force applied. (*class UniformForces*)
+```control_input``` control input/points (varying) for beta spine which determines the muscle torque in normal, binormal & tangential direction /control_input
 
-```/direction_UniformTorques``` array 1D (dim) array containing data with 'float' type. Direction in which torque applied. (*class UniformTorques*)
+```/direction_of_rod_extension``` array 1D (dim) array containing data with 'float' type. direction in which rod extends (also the Muscle torque direction). /physical_params 
 
-```/dynamic_viscosity``` Dynamic viscosity of the fluid (float) for slender body theory class (for flow-structure interaction problems). (*class SlenderBodyTheory*)
+```/direction_UniformForces``` array1D (dim) array containing data with 'float' type. Direction in which force applied. (*class UniformForces*) /physical_params
 
-```/end_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to last node of the rod-like object. (*class EndpointForces*)
+```/direction_UniformTorques``` array 1D (dim) array containing data with 'float' type. Direction in which torque applied. (*class UniformTorques*) /physical_params
 
-```/end_force_mag``` Magnitude of Force applied to last node of the rod-like object (*class EndpointForces*)
+```/dynamic_viscosity``` Dynamic viscosity of the fluid (float) for slender body theory class (for flow-structure interaction problems). (*class SlenderBodyTheory*) /physical_params
 
-```/force``` float Force magnitude applied to a rod-like object. (*class UniformForces*)
+```/end_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to last node of the rod-like object. (*class EndpointForces*) /physical_params
 
-```/muscle_torque_mag``` Magnitude of muscle torque getting applied on each element. (*class MuscleTorques*)
+```/end_force_mag``` Magnitude of Force applied to last node of the rod-like object (*class EndpointForces*) /physical_params
 
-```/normal_direction``` array 1D (dim) array containing data with 'float' type for applying force in normal direction. (*class EndpointForcesSinusodial*)
+```/force``` float Force magnitude applied to a rod-like object. (*class UniformForces*) /physical_params
+
+```/muscle_torque_mag``` Magnitude of muscle torque getting applied on each element. (*class MuscleTorques*) /physical_params
+
+```/normal_direction``` array 1D (dim) array containing data with 'float' type for applying force in normal direction. (*class EndpointForcesSinusodial*) /physical_params
 
 ```/parameter_events``` it provides a way to subscribe to all parameter updates occurring on the node, including addition removal and changes in value. Every atomic change will be published separately. 
 
-```/period``` period of traveling wave in MuscleTorque class (float). (*class MuscleTorques*)
+```/period``` period of traveling wave in MuscleTorque class (float). (*class MuscleTorques*) /physical_params
 
-```/phase_shift``` float, Phase shift of traveling wave. (*class MuscleTorques*)
+```/phase_shift``` float, Phase shift of traveling wave. (*class MuscleTorques*) /physical_params
 
-```position_x``` position of elements in direction of unit vector x
+```position_x``` position of elements in direction of unit vector x /rod_state
+ 
+```position_y``` position of elements in direction of unit vector y /rod_state
 
-```position_y``` position of elements in direction of unit vector y
+```position_z``` position of elements in direction of unit vector z /rod_state
 
-```position_z``` position of elements in direction of unit vector z
+```/ramp_up_time_EndpointForces``` float ,applied Endpoint Forces are ramped up until ramp up time. (*class EndpointForces*) /physical_params
 
-```/ramp_up_time_EndpointForces``` float ,applied Endpoint Forces are ramped up until ramp up time. (*class EndpointForces*)
+```/ramp_up_time_EndpointForcesSinusoidal``` float ,applied Endpoint Sinusoidal Forces are ramped up until ramp up time. (*class EndpointForcesSinusodial*) /physical_params
 
-```/ramp_up_time_EndpointForcesSinusoidal``` float ,applied Endpoint Sinusoidal Forces are ramped up until ramp up time. (*class EndpointForcesSinusodial*)
+```/ramp_up_time_MuscleTorques``` float ,applied muscle torques are ramped up until ramp up time. (*class MuscleTorques*) /physical_params
 
-```/ramp_up_time_MuscleTorques``` float ,applied muscle torques are ramped up until ramp up time. (*class MuscleTorques*)
+```/rest_lengths``` length of each element at rest. /physical_params
 
-```/rest_lengths``` length of each element at rest. 
-
-```/rod_tip_orientation``` rod tip's orientation in quaternion form 
+```/rod_tip_orientation``` rod tip's orientation in quaternion form /physical_params
 
 ```/rosout``` ROS client libraries are required to publish console logging messages to the /rosout topic as a standard interface. 
 
-```/start_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to first node of the rod-like object. (*class EndpointForces*)
+```/start_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to first node of the rod-like object. (*class EndpointForces*) /physical_params
 
-```/start_force_mag``` Magnitude of Force applied to first node of the rod-like object (*class EndpointForcesSinusodial*)
+```/start_force_mag``` Magnitude of Force applied to first node of the rod-like object (*class EndpointForcesSinusodial*) /physical_params
 
-```/t_coeff_optimized``` optimized coefficients for a snake gait (*class MuscleTorques*)
+```/tangent_direction``` array 1D (dim) array containing data with 'float' type for applying force in tangent direction (*class EndpointForcesSinusodial*) /physical_params
 
-```/tangent_direction``` array 1D (dim) array containing data with 'float' type for applying force in tangent direction (*class EndpointForcesSinusodial*)
+```/torque``` Torque magnitude applied to a rod-like object (float). (*class UniformTorques*) /physical_params
 
-```/torque``` Torque magnitude applied to a rod-like object (float). (*class UniformTorques*)
+```/uniformforces_mag``` Magnitude of uniform forces getting applied on each element. (*class UniformForces*) /physical_params
 
-```/uniformforces_mag``` Magnitude of uniform forces getting applied on each element. (*class UniformForces*)
+```/uniformtorques_mag``` Magnitude of uniform torques getting applied on each element. (*class UniformTorques*) /physical_params
 
-```/uniformtorques_mag``` Magnitude of uniform torques getting applied on each element. (*class UniformTorques*)
+```velocity_x``` velocity of elements in direction of unit vector x /rod_state
 
-```velocity_x``` velocity of elements in direction of unit vector x
+```velocity_y``` velocity of elements in direction of unit vector y /rod_state
 
-```velocity_y``` velocity of elements in direction of unit vector y
+```velocity_z``` velocity of elements in direction of unit vector z /rod_state
 
-```velocity_z``` velocity of elements in direction of unit vector z
+```/wave_length``` Wave length of traveling wave. (float) (*class MuscleTorques*) /physical_params
 
-```/wave_length``` Wave length of traveling wave. (float) (*class MuscleTorques*)
+```/wave_number``` Wave number of traveling wave. (float) (*class MuscleTorques*) /physical_params
 
-```/wave_number``` Wave number of traveling wave. (float) (*class MuscleTorques*)
-
-```/with_spline``` Option to use beta-spline. (boolean) (*class MuscleTorques*)
+```/with_spline``` Option to use beta-spline. (boolean) (*class MuscleTorques*) /physical_params

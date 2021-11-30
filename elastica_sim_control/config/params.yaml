@@ -1,0 +1,5 @@
+elastica_pub_sub:
+  ros__parameters:
+    queue_size: 10
+    print_params: 1
+    

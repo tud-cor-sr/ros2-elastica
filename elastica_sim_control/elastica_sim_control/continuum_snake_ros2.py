@@ -44,7 +44,6 @@ rod_state["position_z"] = mp.Array('d',51)
 rod_state["velocity_x"] = mp.Array('d',51)
 rod_state["velocity_y"] = mp.Array('d',51)
 rod_state["velocity_z"] = mp.Array('d',51)
-print_params = int(input("Enter '1' for printing the subscriber callback parameters' values and '0' for otherwise \n"))
 
 
 class SnakeSimulator(BaseSystemCollection, Constraints, Forcing, CallBacks):
@@ -292,7 +291,7 @@ def run_snake(
     def ros_node():
         rclpy.init(args=None)
         
-        elastica_pub_sub = ElasticaPublisherSubscriber(snake_run.sim_params, rod_state, print_params,snake_run.time_tracker,control_input)
+        elastica_pub_sub = ElasticaPublisherSubscriber(snake_run.sim_params, rod_state,snake_run.time_tracker,control_input)
         rclpy.spin(elastica_pub_sub)
 
         
