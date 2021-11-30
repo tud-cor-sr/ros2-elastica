@@ -14,7 +14,7 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml'))
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'pyelastica', 'matplotlib', 'numpy', 'moviepy', 'ffmpeg'],
     zip_safe=True,
     author='Prakarsh Kaushik',
     author_email='prakarshkaushik369@gmail.com',
