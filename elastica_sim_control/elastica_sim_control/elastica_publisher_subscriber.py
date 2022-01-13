@@ -126,23 +126,23 @@ class ElasticaPublisherSubscriber(Node):
         
 
     def listener_callback_physical_params(self, msg):
-        if self.print_params: print('I heard rod tip orientation:', [msg.rod_tip_orientation.w,msg.rod_tip_orientation.x,msg.rod_tip_orientation.y,msg.rod_tip_orientation.z])
+        if self.print_params: self.get_logger().info('I heard rod tip orientation: '+ (str([msg.rod_tip_orientation.w,msg.rod_tip_orientation.x,msg.rod_tip_orientation.y,msg.rod_tip_orientation.z])))
     def listener_callback_rod_state(self, msg):
         if self.print_params: 
-            print("I heard rod_state's position_y:", msg.position_x)
-            print("I heard rod_state's position_y:", msg.position_y)
-            print("I heard rod_state's position_z:", msg.position_z)
-            print("I heard rod_state's velocity_x:", msg.velocity_x)
-            print("I heard rod_state's velocity_y:", msg.velocity_y)
-            print("I heard rod_state's velocity_z:", msg.velocity_z)
+            self.get_logger().info("I heard rod_state's position_y: "+ (str(msg.position_x)))
+            self.get_logger().info("I heard rod_state's position_y: "+ (str(msg.position_y)))
+            self.get_logger().info("I heard rod_state's position_z: "+  (str(msg.position_z)))
+            self.get_logger().info("I heard rod_state's velocity_x: "+  (str(msg.velocity_x)))
+            self.get_logger().info("I heard rod_state's velocity_y: "+  (str(msg.velocity_y)))
+            self.get_logger().info("I heard rod_state's velocity_z: "+  (str(msg.velocity_z)))
     def listener_callback_control_input(self, msg):
         if self.print_params: 
-            print("I heard control points", msg.control_points)
+            self.get_logger().info("I heard control points"+ (str(msg.control_points)))
         
         if int(self.time_tracker.value) % 3 == 0 and self.count ==0 and (self.time_tracker.value)>3.0 :
                 self.control_input["control_points"][:] = self.sampleControlPoints(6)
                 self.count = 1
-                print ("CHANGING CONTROL")
+                self.get_logger().info("CHANGING CONTROL")
         if self.count==1 and self.time_tracker.value % 3>2.9:
                 self.count =0
         
