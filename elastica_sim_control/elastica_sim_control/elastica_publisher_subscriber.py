@@ -18,10 +18,12 @@ class ElasticaPublisherSubscriber(Node):
             namespace='',
             parameters=[
                 ('queue_size', None),
-                ('print_params', None)
+                ('print_params', None),
+                ('pub_frequency', None)
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
+        self.pub_frequency = self.get_parameter('pub_frequency').get_parameter_value().double_value
         self.sim_params = sim_params
         self.rod_state = rod_state
         self.count = 0
@@ -35,7 +37,7 @@ class ElasticaPublisherSubscriber(Node):
         self.publisher2  =  self.create_publisher(ControlInput, '/control_input', self.queue_size)
         self.control_input = control_input
         self.time_tracker = time_tracker
-        timer_period = 0.5  # seconds
+        timer_period = 1/self.pub_frequency  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         self.subscription0 = self.create_subscription(PhysicalParams,'/physical_params',self.listener_callback_physical_params,self.queue_size)
