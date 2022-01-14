@@ -14,26 +14,27 @@ from tqdm import tqdm
 # sys.path.append("../../")
 import os
 from elastica import *
-from elastica_sim_control.continuum_flagella_postprocessing import (
+from elastica_sim.continuum_flagella_postprocessing import (
     plot_velocity,
     plot_video,
     compute_projected_velocity,
 )
 
-#you can choose a different number of control points or torque scaling factor by changing the number_of_control_points and alpha
-from elastica_sim_control import MuscleTorquesWithVaryingBetaSplines
 
 # sys.path.append("../../elastica_publisher_subscriber")
 # sys.path.append("../../utils")
 
-from elastica_sim_control.elastica_publisher_subscriber import *
-from elastica_sim_control.utils import *
+from elastica_sim.elastica_publisher_subscriber import *
+from elastica_sim.utils import *
 
 
 rod_state = defaultdict(list)
 
 control_input = defaultdict(list)
-control_input["control_points"]  = mp.Array('d', 18)
+no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
+control_input["control_torque"]  = mp.Array('d', no_of_segments)
+control_input["control_torque_dir"]  = mp.Array('d', no_of_segments*3)
+
 
 rod_state["rod_tip_orientation"] = mp.Array('d', 4) #Quaternion form
 
@@ -70,6 +71,7 @@ class DefineFlagella():
         self.sim_params["time_step"] = np.float64(float(self.sim_params["final_time"]) / self.sim_params["total_steps"])
         self.sim_params["step_skip"] = int(1.0 / (rendering_fps * self.sim_params["time_step"]))
         self.sim_params["max_rate_of_change_of_activation"] = np.infty
+        self.sim_params["no_of_segments"] = 6
         
         self.flagella_sim = FlagellaSimulator()
          # setting up test params
@@ -89,50 +91,44 @@ class DefineFlagella():
 
         self.sim_params["radius_along_rod"] = np.linspace(self.sim_params["radius_base"], self.sim_params["radius_tip"], self.sim_params["n_elem"])
 
-        self.shearable_rod = CosseratRod.straight_rod(
-            self.sim_params["n_elem"],
-            self.sim_params["start"],
-            self.sim_params["direction_of_rod_extension"],
-            self.sim_params["normal"],
-            self.sim_params["base_length"],
-            base_radius=self.sim_params["radius_along_rod"],
-            density=self.sim_params["density"],
-            nu= self.sim_params["NU"],
-            youngs_modulus= self.sim_params["E"],
-            poisson_ratio=self.sim_params["poisson_ratio"],
-        )
-        self.flagella_sim.append(self.shearable_rod)
+        # Pneumatic Segments creation
+        self.shearable_rods = self.segment_creation()
         
-        self.torque_profile_list_for_muscle_in_normal_dir = defaultdict(list)
-        self.control_points_array_normal_dir = []
-        # Apply torques
-        self.flagella_sim.add_forcing_to(self.shearable_rod).using(
-            MuscleTorquesWithVaryingBetaSplines,
-            base_length=self.sim_params["base_length"],
-            number_of_control_points=self.sim_params["number_of_control_points"],
-            points_func_array=self.control_points_array_normal_dir,
-            muscle_torque_scale=self.sim_params["alpha"],
-            direction=str("normal"),
-            step_skip=self.sim_params["step_skip"],
-            max_rate_of_change_of_activation=self.sim_params["max_rate_of_change_of_activation"],
-            torque_profile_recorder=self.torque_profile_list_for_muscle_in_normal_dir,
+        for i in self.shearable_rods: self.flagella_sim.append(i)
+        
+        # Apply boundary conditions to shearble rod1.
+        self.flagella_sim.constrain(self.shearable_rods[0]).using(
+            OneEndFixedRod, constrained_position_idx=(0,), constrained_director_idx=(0,)
         )
+        
+        # Connect shearable rods (pneumatic segments) with each other
+        for i in range(self.sim_params["no_of_segments"]-1): self.flagella_sim.connect(first_rod=self.shearable_rods[i], second_rod=self.shearable_rods[i+1], 
+                                                                                   first_connect_idx=-1, second_connect_idx=0).using(FixedJoint, k=1e5, nu=0, kt=5e3)
+
+        
+        self.control_inp_torque = (np.random.rand(self.sim_params["no_of_segments"]))
+        self.control_inp_torque_dir = np.array([[0.0, 0.0, 0.0]]*self.sim_params["no_of_segments"])  # Number_of_segments X No_of_directions
+        # Apply torques
+        for i in range(self.sim_params["no_of_segments"]) : self.flagella_sim.add_forcing_to(self.shearable_rods[i]).using(
+                                                            torque = self.control_inp_torque[i],
+                                                            direction = self.control_inp_torque_dir[i]
+                                                        )
         
         self.sim_params["phase_shift"] = 0.0
         self.sim_params["ramp_up_time_MuscleTorques"]=self.sim_params["period"]
-        self.sim_params["rest_lengths"]=self.shearable_rod.rest_lengths
+        self.sim_params["rest_lengths"]= [i.rest_lengths for i in self.shearable_rods]
         self.sim_params["with_spline"]=True
         self.sim_params["ramp_up_time_EndpointForces"] = 0.0
         self.sim_params["ramp_up_time_EndpointForcesSinusoidal"] = 0.0
         
-        my_spline = np.ones(np.cumsum(self.shearable_rod.rest_lengths).shape)
+        my_spline = [np.ones(np.cumsum(i.rest_lengths).shape) for i in self.shearable_rods]
         time = 1.0
         angular_frequency = 2.0 * np.pi / self.sim_params["period"]
         factor = min(1.0, time / self.sim_params["period"])
         self.sim_params["force"] = 0.0
         self.sim_params["direction_UniformForces"] = np.array([0.0, 0.0, 0.0])
-        self.sim_params["torque"] = 0.0
-        self.sim_params["direction_UniformTorques"] = np.array([0.0, 0.0, 0.0]) 
+        self.sim_params["torque"] = self.control_inp_torque
+        self.sim_params["direction_UniformTorques"] = self.control_inp_torque_dir 
         self.sim_params["start_force"] =  np.array([0.0, 0.0, 0.0])
         self.sim_params["end_force"] =  np.array([0.0, 0.0, 0.0])
         self.sim_params["ramp_up_time_EndpointForces"] = 0.0
@@ -153,9 +149,9 @@ class DefineFlagella():
         self.sim_params["dynamic_viscosity"] = (
             fluid_density * self.sim_params["base_length"] * self.sim_params["base_length"] / (self.sim_params["period"] * reynolds_number)
         )
-        self.flagella_sim.add_forcing_to(self.shearable_rod).using(
-            SlenderBodyTheory, dynamic_viscosity=self.sim_params["dynamic_viscosity"]
-        )
+        for i in range(self.sim_params["no_of_segments"]) : self.flagella_sim.add_forcing_to(self.shearable_rods[i]).using(
+                                                                SlenderBodyTheory, dynamic_viscosity=self.sim_params["dynamic_viscosity"]
+                                                            )
         
         self.time_tracker = mp.Value('d', 0.0)
         
@@ -191,7 +187,7 @@ class DefineFlagella():
                     
                     
                     if time >= 10.0:
-                        pp_list_file = open("continuum_flagella.dat", "wb")
+                        pp_list_file = open("continuum_flagella_"+str((self.callback_params+1))+".dat", "wb")
                         pickle.dump(self.pp_list_copy, pp_list_file)
                         pp_list_file.close()
 
@@ -213,24 +209,35 @@ class DefineFlagella():
                     return
         
                         
-        self.pp_list = defaultdict(list)
-        self.flagella_sim.collect_diagnostics(self.shearable_rod).using(
-            ContinuumFlagellaCallBack, step_skip=200, callback_params=self.pp_list
-        )
+        self.pp_list = range(self.sim_params["no_of_segments"])
+        
+        for i in range(self.sim_params["no_of_segments"]) : self.flagella_sim.collect_diagnostics(self.shearable_rods[i]).using(
+                                                            ContinuumFlagellaCallBack, step_skip=200, callback_params=self.pp_list[i]
+                                                        )
         self.flagella_sim.finalize()
         # do_step, stages_and_updates will be used in step function
         self.do_step, self.stages_and_updates = extend_stepper_interface(
                                 self.StatefulStepper,self.flagella_sim
                             )
+    
+    
+    def segment_creation(self):
+        shearable_rods =  np.array([None]*self.sim_params["no_of_segments"])
         
+        for i in range(self.sim_params["no_of_segments"]):
+            shearable_rods[i] = CosseratRod.straight_rod(self.sim_params["n_elem"], self.sim_params["start"],self.sim_params["direction_of_rod_extension"], 
+                                                        self.sim_params["normal"], self.sim_params["base_length"],self.sim_params["base_radius"],
+                                                        self.sim_params["density"], self.sim_params["nu"],self.sim_params["E"],self.sim_params["poisson_ratio"],
+                                                        )
+            self.sim_params["start"] = self.sim_params["start"]+ self.sim_params["direction_of_rod_extension"] * self.sim_params["base_length"]
+        return shearable_rods
         
         
         
     def time_stepping(self, control_input):
         
-        self.control_points_array_normal_dir[:] = control_input[
-                : self.sim_params["number_of_control_points"]
-            ]
+        self.control_inp_torque = control_input["control_torque"][:]
+        self.control_inp_torque_dir = control_input["control_torque_dir"][:].reshape((no_of_segments,3))
         
         
         self.time_tracker.value = self.do_step(
@@ -245,19 +252,22 @@ class DefineFlagella():
             done =True
         
         # Checking for NaN positon of the rod. If so, stop the simulation
-        invalid_values_condition = _isnan_check(self.shearable_rod.position_collection)
+        invalid_values_condition = []
+        # Checking for NaN positon of the rod. If so, stop the simulation
+        for i in range(self.sim_params["no_of_segments"]) : invalid_values_condition.append(_isnan_check(self.shearable_rods[i].position_collection))
 
-        if invalid_values_condition == True:
+        if any(invalid_values_condition) == True:
             print(" NaN detected, will exit the simulation")
-            self.shearable_rod.position_collection = np.zeros(
-                self.shearable_rod.position_collection.shape
-            )
+            for i in range(self.sim_params["no_of_segments"]) :
+                self.shearable_rods[i].position_collection = np.zeros(
+                    self.shearable_rods[i].position_collection.shape
+                )
             done = True
         return done
 
 
-control_input["control_points"][:] = ((np.random.rand(3 * 6) - 0.5) * 2)
-
+control_input["control_torque"][:] = (np.random.rand(no_of_segments))
+control_input["control_torque_dir"][:] = np.array([[0.0, 0.0, 0.0]]*no_of_segments)
             
 def run_flagella(
          b_coeff,PLOT_FIGURE=False, SAVE_FIGURE=False, SAVE_VIDEO=False, SAVE_RESULTS=False
@@ -298,30 +308,34 @@ def run_flagella(
     if not p2.is_alive():
         p1.terminate()
     
-    pp_list_file = open("continuum_flagella.dat", "rb")
-    pp_list = pickle.load(pp_list_file)
+    pp_list = []
+    for i in range(no_of_segments):
+        pp_list_file = open("continuum_flagella_"+str((i+1))+".dat", "rb")
+        pp_list.append(pickle.load(pp_list_file))
     
     if PLOT_FIGURE:
-        filename_plot = "continuum_flagella_velocity.png"
-        plot_velocity(pp_list, flagella_run.sim_params["period"], filename_plot, SAVE_FIGURE)
+        for i in range(no_of_segments):
+            filename_plot = "continuum_flagella_velocity_"+str((i+1))+".png"
+            plot_velocity(pp_list[i], flagella_run.sim_params["period"], filename_plot, SAVE_FIGURE)
 
         if SAVE_VIDEO:
-            filename_video = "continuum_flagella.mp4"
-            plot_video(pp_list, video_name=filename_video, margin=0.2, fps=200)
+            filename_video = "continuum_flagella_"+str((i+1))+".mp4"
+            plot_video(pp_list[i], video_name=filename_video, margin=0.2, fps=200)
 
     if SAVE_RESULTS:
         pass
     
     else:
-        if os.path.exists("continuum_flagella.dat"):
-            os.remove("continuum_flagella.dat")
-        else:
-            print("The file does not exist")
+        for i in range(no_of_segments):
+            if os.path.exists("continuum_flagella_"+str((i+1))+".dat"):
+                os.remove("continuum_flagella_"+str((i+1))+".dat")
+            else:
+                print("The file does not exist")
 
         # Compute the average forward velocity. These will be used for optimization.
-    [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, flagella_run.sim_params["period"])
+    # [_, _, avg_forward, avg_lateral] = compute_projected_velocity(pp_list, flagella_run.sim_params["period"])
 
-    return avg_forward, avg_lateral, pp_list
+    return  pp_list
 
     
 def main():
@@ -371,12 +385,12 @@ def main():
             t_coeff_optimized = np.array([17.4, 48.5, 5.4, 14.7, 0.38])
 
         # run the simulation
-        [avg_forward, avg_lateral, pp_list] = run_flagella(
+        [pp_list] = run_flagella(
             t_coeff_optimized,PLOT_FIGURE, SAVE_FIGURE, SAVE_VIDEO, SAVE_RESULTS
         )
 
-        print("average forward velocity:", avg_forward)
-        print("average forward lateral:", avg_lateral)
+        # print("average forward velocity:", avg_forward)
+        # print("average forward lateral:", avg_lateral)
 
 if __name__ == "__main__":
     

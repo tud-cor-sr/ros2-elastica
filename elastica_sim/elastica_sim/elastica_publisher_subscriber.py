@@ -27,40 +27,27 @@ class ElasticaPublisherSubscriber(Node):
         self.sim_params = sim_params
         self.rod_state = rod_state
         self.count = 0
+        self.control_input = control_input
 
         self.physical_params = PhysicalParams()
         self.rod_state_msg = RodState()
-        self.control_input_msg = ControlInput()
+        self.sim_time_msg = SimulationTime()
+        
 
         self.publisher0 = self.create_publisher(PhysicalParams, '/physical_params', self.queue_size)
         self.publisher1 = self.create_publisher(RodState, '/rod_state', self.queue_size)
-        self.publisher2  =  self.create_publisher(ControlInput, '/control_input', self.queue_size)
-        self.control_input = control_input
+        self.publisher2  =  self.create_publisher(TimeTracker, '/time_tracker', self.queue_size)
+        
+        
         self.time_tracker = time_tracker
         timer_period = 1/self.pub_frequency  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
-        self.subscription0 = self.create_subscription(PhysicalParams,'/physical_params',self.listener_callback_physical_params,self.queue_size)
-        self.subscription1 = self.create_subscription(RodState,'/rod_state',self.listener_callback_rod_state,self.queue_size)
-        self.subscription2 = self.create_subscription(ControlInput,'/control_input',self.listener_callback_control_input,self.queue_size)
+        
+        self.subscription0 = self.create_subscription(ControlInput,'/control_input',self.listener_callback_control_input,self.queue_size)
         
         # prevent unused variable warning
         self.subscription0
-        self.subscription1
-        self.subscription2
-        
-    def sampleControlPoints(self,number_of_control_points):
-        """
-        Sample usable random control point values.
-        Returns
-        -------
-        numpy.ndarray
-            1D (3 * number_of_control_points,) array containing data with 'float' type, in range [-1, 1].
-        """
-        random_control_points = []
-        random_control_points[:] = ((np.random.rand(3 * number_of_control_points) - 0.5) * 2)
-                
-        return random_control_points
 
     def timer_callback(self):
         
@@ -118,15 +105,16 @@ class ElasticaPublisherSubscriber(Node):
         self.rod_state_msg.velocity_y.data = np.squeeze(self.rod_state["velocity_y"]).tolist()
         self.rod_state_msg.velocity_z.data = np.squeeze(self.rod_state["velocity_z"]).tolist()
         
-        self.control_input_msg.control_points.data =  np.squeeze(self.control_input["control_points"]).tolist()
+        self.sim_time_msg.current_sim_time.data = self.time_tracker.value
         
         self.publisher0.publish(self.physical_params)
         self.publisher1.publish(self.rod_state_msg)
-        self.publisher2.publish(self.control_input_msg)
+        self.publisher2.publish(self.sim_time_msg)
         
 
     def listener_callback_physical_params(self, msg):
         if self.print_params: self.get_logger().info('I heard rod tip orientation: '+ (str([msg.rod_tip_orientation.w,msg.rod_tip_orientation.x,msg.rod_tip_orientation.y,msg.rod_tip_orientation.z])))
+    
     def listener_callback_rod_state(self, msg):
         if self.print_params: 
             self.get_logger().info("I heard rod_state's position_y: "+ (str(msg.position_x)))
@@ -135,16 +123,12 @@ class ElasticaPublisherSubscriber(Node):
             self.get_logger().info("I heard rod_state's velocity_x: "+  (str(msg.velocity_x)))
             self.get_logger().info("I heard rod_state's velocity_y: "+  (str(msg.velocity_y)))
             self.get_logger().info("I heard rod_state's velocity_z: "+  (str(msg.velocity_z)))
+    
     def listener_callback_control_input(self, msg):
         if self.print_params: 
-            self.get_logger().info("I heard control points"+ (str(msg.control_points)))
-        
-        if int(self.time_tracker.value) % 3 == 0 and self.count ==0 and (self.time_tracker.value)>3.0 :
-                self.control_input["control_points"][:] = self.sampleControlPoints(6)
-                self.count = 1
-                self.get_logger().info("CHANGING CONTROL")
-        if self.count==1 and self.time_tracker.value % 3>2.9:
-                self.count =0
+            self.get_logger().info("I heard control torque"+ (str(msg.control_torques)))
+        self.control_input["control_torque"][:] = msg.control_torques
+        self.control_input["control_torque_dir"][:] = np.array(msg.control_torque_dir).ravel()
         
     
 #############################################################################

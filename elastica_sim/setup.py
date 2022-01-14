@@ -1,7 +1,7 @@
 from setuptools import setup
 import os
 from glob import glob
-package_name = 'elastica_sim_control'
+package_name = 'elastica_sim'
 
 setup(
     name=package_name,
@@ -25,8 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'continuum_flagella_ros2 = elastica_sim_control.continuum_flagella_ros2:main',
-            'continuum_snake_ros2 = elastica_sim_control.continuum_snake_ros2:main',
+            'continuum_flagella_ros2 = elastica_sim.continuum_flagella_ros2:main',
+            'continuum_snake_ros2 = elastica_sim.continuum_snake_ros2:main',
         ],
 },
 )
