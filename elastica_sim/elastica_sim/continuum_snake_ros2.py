@@ -27,25 +27,34 @@ from elastica_sim.continuum_snake_postprocessing import (
 from elastica_sim.elastica_publisher_subscriber import *
 from elastica_sim.utils import *
 
-rod_state = defaultdict(list)
+no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
+n_elements = 50 #number of elements for Cosserat rod
+rod_state = [defaultdict(list)]*no_of_segments
 
 control_input = defaultdict(list)
 no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
 control_input["control_torque"]  = mp.Array('d', no_of_segments)
 control_input["control_torque_dir"]  = mp.Array('d', no_of_segments*3)
 
-rod_state["rod_tip_orientation"] = mp.Array('d', 4) #Quaternion form
+def rod_state_mp_arr_create(n_segments):
+    for i in range(n_segments):
+        #Quaternion form
+        rod_state[i]["rod_tip_orientation_w"] = mp.Array('d',n_elements) 
+        rod_state[i]["rod_tip_orientation_x"] = mp.Array('d',n_elements)
+        rod_state[i]["rod_tip_orientation_y"] = mp.Array('d',n_elements) 
+        rod_state[i]["rod_tip_orientation_z"] = mp.Array('d',n_elements)
 
-# The array is of size 51 according to 'number of elements for Cosserat rod + 1'
-rod_state["position_x"] = mp.Array('d',51)    
-rod_state["position_y"] = mp.Array('d',51)
-rod_state["position_z"] = mp.Array('d',51)
-rod_state["velocity_x"] = mp.Array('d',51)
-rod_state["velocity_y"] = mp.Array('d',51)
-rod_state["velocity_z"] = mp.Array('d',51)
+        # The array is of size 51 according to 'number of elements for Cosserat rod + 1'
+        rod_state[i]["position_x"] = mp.Array('d',n_elements+1)    
+        rod_state[i]["position_y"] = mp.Array('d',n_elements+1)
+        rod_state[i]["position_z"] = mp.Array('d',n_elements+1)
+        rod_state[i]["velocity_x"] = mp.Array('d',n_elements+1)
+        rod_state[i]["velocity_y"] = mp.Array('d',n_elements+1)
+        rod_state[i]["velocity_z"] = mp.Array('d',n_elements+1)
 
+rod_state_mp_arr_create(no_of_segments)
 
-class SnakeSimulator(BaseSystemCollection, Constraints, Forcing, CallBacks):
+class SnakeSimulator(BaseSystemCollection, Connections, Constraints, Forcing, CallBacks):
     pass
 
 
@@ -81,8 +90,10 @@ class DefineSnake():
         self.sim_params["nu"] = 5.0
         self.sim_params["E"] = 1e7
         self.sim_params["poisson_ratio"] = 0.5
-        
-        
+        self.sim_params["radius_tip"] = 0.05  # radius of the rod at the tip
+        self.sim_params["radius_base"] = 0.05  # radius of the rod at the base
+
+        self.sim_params["radius_along_rod"] = np.linspace(self.sim_params["radius_base"], self.sim_params["radius_tip"], self.sim_params["n_elem"])
 
         # Pneumatic Segments creation
         self.shearable_rods = self.segment_creation()
@@ -110,6 +121,7 @@ class DefineSnake():
         self.control_inp_torque_dir = np.array([[0.0, 0.0, 0.0]]*self.sim_params["no_of_segments"])  # Number_of_segments X No_of_directions
         # Apply torques
         for i in range(self.sim_params["no_of_segments"]) : self.snake_sim.add_forcing_to(self.shearable_rods[i]).using(
+                                                            UniformTorques,
                                                             torque = self.control_inp_torque[i],
                                                             direction = self.control_inp_torque_dir[i]
                                                         )
@@ -118,10 +130,10 @@ class DefineSnake():
         self.sim_params["wave_length"] = self.sim_params["b_coeff"][-1]
         self.sim_params["wave_number"]=2.0 * np.pi / (self.sim_params["wave_length"])
         self.sim_params["phase_shift"]=0.0
-        self.sim_params["rest_lengths"]=[i.rest_lengths for i in self.shearable_rods]
+        # self.sim_params["rest_lengths"]=[i.rest_lengths for i in self.shearable_rods]
         self.sim_params["ramp_up_time_MuscleTorques"]=self.sim_params["period"]
         self.sim_params["with_spline"]=True
-        self.sim_params["my_spline"] = [np.ones(np.cumsum(i.rest_lengths).shape) for i in self.shearable_rods]
+        # self.sim_params["my_spline"] = [np.ones(np.cumsum(i.rest_lengths).shape) for i in self.shearable_rods]
         self.sim_params["time"] = 1.0
         self.sim_params["angular_frequency"] = 2.0 * np.pi / self.sim_params["period"]
         self.sim_params["factor"] = min(1.0, self.sim_params["time"] / self.sim_params["period"])
@@ -140,9 +152,9 @@ class DefineSnake():
         self.sim_params["tangent_direction"] = np.array([0.0, 0.0, 0.0])
         self.sim_params["normal_direction"] = np.array([0.0, 0.0, 0.0])
         
-        self.sim_params["muscle_torque_mag"] = muscle_torque_mag_cal(self.sim_params["factor"], self.sim_params["my_spline"], self.sim_params["angular_frequency"], self.sim_params["time"], self.sim_params["wave_length"], self.sim_params["rest_lengths"])
-        self.sim_params["uniformforces_mag"] = uniformforces_mag_cal(self.sim_params["force"],self.sim_params["direction_UniformForces"], self.sim_params["n_elem"])
-        self.sim_params["uniformtorques_mag"] = uniformtorques_mag_cal(self.sim_params["torque"], self.sim_params["direction_UniformTorques"], self.sim_params["n_elem"])
+        # self.sim_params["muscle_torque_mag"] = muscle_torque_mag_cal(self.sim_params["factor"], self.sim_params["my_spline"], self.sim_params["angular_frequency"], self.sim_params["time"], self.sim_params["wave_length"], self.sim_params["rest_lengths"])
+        # self.sim_params["uniformforces_mag"] = uniformforces_mag_cal(self.sim_params["force"],self.sim_params["direction_UniformForces"], self.sim_params["n_elem"])
+        # self.sim_params["uniformtorques_mag"] = uniformtorques_mag_cal(self.sim_params["torque"], self.sim_params["direction_UniformTorques"], self.sim_params["n_elem"], self.sim_params["no_of_segments"])
         
         
         # Add friction forces
@@ -179,42 +191,48 @@ class DefineSnake():
                 CallBackBaseClass.__init__(self)
                 self.every = step_skip
                 self.callback_params = callback_params
-                self.pp_list_copy = defaultdict(list)
+                self.pp_list_copy = [defaultdict(list)]*no_of_segments
+
                 
 
             def make_callback(self, system, time, current_step: int):
 
                 if current_step % self.every == 0:
-                    Q = system.director_collection[..., -1]
-                    qw = np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2
-                    qx = (Q[2, 1] - Q[1, 2]) / (4 * qw)
-                    qy = (Q[0, 2] - Q[2, 0]) / (4 * qw)
-                    qz = (Q[1, 0] - Q[0, 1]) / (4 * qw)
-                    rod_state["rod_tip_orientation"][:] = [qw, qx, qy, qz]
-                    rod_state["position_x"][:] = system.position_collection[0]
-                    rod_state["position_y"][:] = system.position_collection[1]
-                    rod_state["position_z"][:] = system.position_collection[2]
-                    rod_state["velocity_x"][:] = system.velocity_collection[0]
-                    rod_state["velocity_y"][:] = system.velocity_collection[1]
-                    rod_state["velocity_z"][:] = system.velocity_collection[2]
+                    qw,qx,qy,qz = [], [], [], []
+                    for i in range(n_elements):
+                        Q = system.director_collection[..., i]
+                        qw.append(np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2)
+                        qx.append((Q[2, 1] - Q[1, 2]) / (4 * qw[i]))
+                        qy.append((Q[0, 2] - Q[2, 0]) / (4 * qw[i]))
+                        qz.append((Q[1, 0] - Q[0, 1]) / (4 * qw[i]))
+                    rod_state[self.callback_params]["rod_tip_orientation_w"][:] = np.array(qw)
+                    rod_state[self.callback_params]["rod_tip_orientation_x"][:] = np.array(qx)
+                    rod_state[self.callback_params]["rod_tip_orientation_y"][:] = np.array(qy)
+                    rod_state[self.callback_params]["rod_tip_orientation_z"][:] = np.array(qz)
+                    rod_state[self.callback_params]["position_x"][:] = system.position_collection[0]
+                    rod_state[self.callback_params]["position_y"][:] = system.position_collection[1]
+                    rod_state[self.callback_params]["position_z"][:] = system.position_collection[2]
+                    rod_state[self.callback_params]["velocity_x"][:] = system.velocity_collection[0]
+                    rod_state[self.callback_params]["velocity_y"][:] = system.velocity_collection[1]
+                    rod_state[self.callback_params]["velocity_z"][:] = system.velocity_collection[2]
 
                     if time >= 10.0:
                         pp_list_file = open("continuum_snake_"+str((self.callback_params+1))+".dat", "wb")
-                        pickle.dump(self.pp_list_copy, pp_list_file)
+                        pickle.dump(self.pp_list_copy[self.callback_params], pp_list_file)
                         pp_list_file.close()
 
-                    self.pp_list_copy["time"].append(time)
-                    self.pp_list_copy["step"].append(current_step)
-                    self.pp_list_copy["position"].append(
+                    self.pp_list_copy[self.callback_params]["time"].append(time)
+                    self.pp_list_copy[self.callback_params]["step"].append(current_step)
+                    self.pp_list_copy[self.callback_params]["position"].append(
                         system.position_collection.copy()
                     )
-                    self.pp_list_copy["velocity"].append(
+                    self.pp_list_copy[self.callback_params]["velocity"].append(
                         system.velocity_collection.copy()
                     )
-                    self.pp_list_copy["avg_velocity"].append(
+                    self.pp_list_copy[self.callback_params]["avg_velocity"].append(
                         system.compute_velocity_center_of_mass()
                     )
-                    self.pp_list_copy["center_of_mass"].append(
+                    self.pp_list_copy[self.callback_params]["center_of_mass"].append(
                         system.compute_position_center_of_mass()
                     )
 
@@ -237,7 +255,7 @@ class DefineSnake():
         
         for i in range(self.sim_params["no_of_segments"]):
             shearable_rods[i] = CosseratRod.straight_rod(self.sim_params["n_elem"], self.sim_params["start"],self.sim_params["direction_of_rod_extension"], 
-                                                        self.sim_params["normal"], self.sim_params["base_length"],self.sim_params["base_radius"],
+                                                        self.sim_params["normal"], self.sim_params["base_length"],self.sim_params["radius_along_rod"],
                                                         self.sim_params["density"], self.sim_params["nu"],self.sim_params["E"],self.sim_params["poisson_ratio"],
                                                         )
             self.sim_params["start"] = self.sim_params["start"]+ self.sim_params["direction_of_rod_extension"] * self.sim_params["base_length"]
@@ -245,8 +263,8 @@ class DefineSnake():
         
     def time_stepping(self, control_input):
         
-        self.control_inp_torque = control_input["control_torque"][:]
-        self.control_inp_torque_dir = control_input["control_torque_dir"][:].reshape((no_of_segments,3))
+        self.control_inp_torque = np.array(control_input["control_torque"][:])
+        self.control_inp_torque_dir = np.array(control_input["control_torque_dir"][:]).reshape((no_of_segments,3))
             
         
         
@@ -275,7 +293,7 @@ class DefineSnake():
         return done
     
 control_input["control_torque"][:] = (np.random.rand(no_of_segments))
-control_input["control_torque_dir"][:] = np.array([[0.0, 0.0, 0.0]]*no_of_segments)
+control_input["control_torque_dir"][:] = np.array([[0.0, 0.0, 0.0]]*no_of_segments).ravel()
 
     
 def run_snake(
@@ -320,10 +338,11 @@ def run_snake(
     
     pp_list = []
     for i in range(no_of_segments):
-        pp_list_file = open("continuum_snake_"+str((i+1))+".dat", "rb")
-        pp_list.append(pickle.load(pp_list_file))
+        if os.path.exists("continuum_snake_"+str((i+1))+".dat"):
+            pp_list_file = open("continuum_snake_"+str((i+1))+".dat", "rb")
+            pp_list.append(pickle.load(pp_list_file))
 
-    
+        
 
     if PLOT_FIGURE:
         for i in range(no_of_segments):
