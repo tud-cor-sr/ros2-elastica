@@ -32,6 +32,5 @@ geometry_msgs/Wrench end_force
 
 geometry_msgs/Accel acc_gravity
 
-geometry_msgs/Quaternion rod_tip_orientation
 
 

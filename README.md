@@ -16,22 +16,14 @@ They can be executed with the help of the following commands:
 
 *Continuum Flagella Case (run with a launch file)*
 ```
-    ros2 launch elastica_sim_control continuum_flagella_ros2.launch.py
+    ros2 launch elastica_sim continuum_flagella_ros2.launch.py
 ```
-*Continuum Flagella Case (run as a executable ros2 node)* 
 
-parameter 'queue_size' is the size of the outgoing message queue used for asynchronous publishing & 'print_params' is for printing the subscriber callback parameters ('1' for printing the subscriber callback parameters' values and '0' for otherwise)
-```
-    ros2 run elastica_sim_control continuum_flagella_ros2 --ros-args -p queue_size:=10 -p print_params:=1
-```
 *Continuum Snake Case (run with a launch file)*
 ```
-    ros2 launch elastica_sim_control continuum_snake_ros2.launch.py
+    ros2 launch elastica_sim continuum_snake_ros2.launch.py
 ```
-*Continuum Snake Case (run as a executable ros2 node)*
-```
-    ros2 run elastica_sim_control continuum_snake_ros2 --ros-args -p queue_size:=10 -p print_params:=1
-```
+
 Note: In *continuum_snake_ros2.py* script, the average velocities' values sometimes goes to *NaN* due to wrong beta coefficient values which exits the simulation
 
 To end the execution of the script, one can do so through Ctrl+C and Ctrl+D for closing & removing the running container after stopping the python script
@@ -47,13 +39,13 @@ If one wants to run the scripts from their local system without a ros interface,
 
 *Continuum Flagella Case*
 ```
-    cd ~/path/to/ros2-elastica/elastica_sim_control/elastica_sim_control/examples/ContinuumFlagellaCase/
+    cd ~/path/to/ros2-elastica/elastica_sim/elastica_sim/examples/ContinuumFlagellaCase/
     python3 continuum_flagella.py 
 ```
 
 *Continuum Snake Case*
 ```
-    cd ~/path/to/ros2-elastica/elastica_sim_control/elastica_sim_control/examples/ContinuumSnakeCase/
+    cd ~/path/to/ros2-elastica/elastica_sim/elastica_sim/examples/ContinuumSnakeCase/
     python3 continuum_snake.py 
 ```
 
@@ -67,7 +59,7 @@ cd /path/to/ros2_ws
 
 ### Build & source the workspace
 ```
-colcon build --packages-select elastica_sim_control
+colcon build --packages-select elastica_sim elastica_controllers
 source install/local_setup.bash
 ```
 
@@ -75,21 +67,12 @@ source install/local_setup.bash
 
 *Continuum Flagella Case (run with a launch file)*
 ```
-    ros2 launch elastica_sim_control continuum_flagella_ros2.launch.py
+    ros2 launch elastica_sim continuum_flagella_ros2.launch.py
 ```
-*Continuum Flagella Case (run as a executable ros2 node)* 
 
-parameter 'queue_size' is the size of the outgoing message queue used for asynchronous publishing & 'print_params' is for printing the subscriber callback parameters ('1' for printing the subscriber callback parameters' values and '0' for otherwise)
-```
-    ros2 run elastica_sim_control continuum_flagella_ros2 --ros-args -p queue_size:=10 -p print_params:=1
-```
 *Continuum Snake Case (run with a launch file)*
 ```
-    ros2 launch elastica_sim_control continuum_snake_ros2.launch.py
-```
-*Continuum Snake Case (run as a executable ros2 node)*
-```
-    ros2 run elastica_sim_control continuum_snake_ros2 --ros-args -p queue_size:=10 -p print_params:=1
+    ros2 launch elastica_sim continuum_snake_ros2.launch.py
 ```
 
 Here is the description of all the ros topics being published. Most of them are the parameters which decide the magnitude of the MuscleTorque, UniformTorques, UniformForces, EndPointForces, EndPointForcesSinusoidal which can be applied to each element of Cosserat rod simulated.
@@ -172,7 +155,7 @@ Here is the description of all the ros topics being published. Most of them are 
 
 ```/uniformforces_mag``` Magnitude of uniform forces getting applied on each element. (*class UniformForces*) /physical_params
 
-```/uniformtorques_mag``` Magnitude of uniform torques getting applied on each element. (*class UniformTorques*) /physical_params
+```/uniformtorques_mag``` Magnitude of uniform torques getting applied on each element per segment (set of consecutive three elements in vector for each segment ). (*class UniformTorques*) /physical_params
 
 ```velocity_x``` velocity of elements in direction of unit vector x /rod_state
 

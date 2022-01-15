@@ -1,0 +1,6 @@
+elastica_random_control:
+  ros__parameters:
+    queue_size: 10
+    print_params: 1
+    pub_frequency: 2.0
+    
