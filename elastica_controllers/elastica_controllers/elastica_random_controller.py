@@ -20,18 +20,20 @@ class ElasticaControl(Node):
             parameters=[
                 ('queue_size', None),
                 ('print_params', None),
-                ('pub_frequency', None)
+                ('pub_frequency', None),
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rod_state'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
         self.pub_frequency = self.get_parameter('pub_frequency').get_parameter_value().double_value
+        self.topic_names = self.get_parameter('topic_names').get_parameter_value().string_array_value
         
         self.no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
         self.count = 0
 
         self.control_input_msg = ControlInput()
 
-        self.publisher_control_inp  =  self.create_publisher(ControlInput, '/control_input', self.queue_size)
+        self.publisher_control_inp  =  self.create_publisher(ControlInput, self.topic_names[0], self.queue_size)
         
         
         self.control_input, self.control_torque_dir =  self.sampleControlTorque()
@@ -39,8 +41,8 @@ class ElasticaControl(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         
-        self.subscription_sim_time = self.create_subscription(SimulationTime,'/time_tracker',self.listener_callback_control_input_change,self.queue_size)
-        self.subscription_rod_state = self.create_subscription(RodState, '/rod_state',self.listener_callback_rod_state,self.queue_size)
+        self.subscription_sim_time = self.create_subscription(SimulationTime,self.topic_names[1],self.listener_callback_control_input_change,self.queue_size)
+        self.subscription_rod_state = self.create_subscription(RodState, self.topic_names[2],self.listener_callback_rod_state,self.queue_size)
         
         # prevent unused variable warning
         self.subscription_sim_time

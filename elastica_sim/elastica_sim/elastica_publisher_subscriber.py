@@ -19,11 +19,14 @@ class ElasticaPublisherSubscriber(Node):
             parameters=[
                 ('queue_size', None),
                 ('print_params', None),
-                ('pub_frequency', None)
+                ('pub_frequency', None),
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rod_state','elastica/physical_params'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
         self.pub_frequency = self.get_parameter('pub_frequency').get_parameter_value().double_value
+        self.topic_names = self.get_parameter('topic_names').get_parameter_value().string_array_value
+        
         self.sim_params = sim_params
         self.rod_state = rod_state
         self.count = 0
@@ -34,9 +37,9 @@ class ElasticaPublisherSubscriber(Node):
         self.sim_time_msg = SimulationTime()
         
 
-        self.publisher_phys_params = self.create_publisher(PhysicalParams, '/physical_params', self.queue_size)
-        self.publisher_rod_state = self.create_publisher(RodState, '/rod_state', self.queue_size)
-        self.publisher_sim_time  =  self.create_publisher(SimulationTime, '/time_tracker', self.queue_size)
+        self.publisher_phys_params = self.create_publisher(PhysicalParams, self.topic_names[3], self.queue_size)
+        self.publisher_rod_state = self.create_publisher(RodState, self.topic_names[2], self.queue_size)
+        self.publisher_sim_time  =  self.create_publisher(SimulationTime, self.topic_names[1], self.queue_size)
         
         
         self.time_tracker = time_tracker
@@ -44,7 +47,7 @@ class ElasticaPublisherSubscriber(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         
-        self.subscription_ctrl_inp = self.create_subscription(ControlInput,'/control_input',self.listener_callback_control_input,self.queue_size)
+        self.subscription_ctrl_inp = self.create_subscription(ControlInput,self.topic_names[0],self.listener_callback_control_input,self.queue_size)
         
         # prevent unused variable warning
         self.subscription_ctrl_inp
