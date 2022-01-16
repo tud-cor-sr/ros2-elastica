@@ -21,7 +21,7 @@ class ElasticaControl(Node):
                 ('queue_size', None),
                 ('print_params', None),
                 ('pub_frequency', None),
-                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rod_state'])
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
@@ -42,7 +42,7 @@ class ElasticaControl(Node):
 
         
         self.subscription_sim_time = self.create_subscription(SimulationTime,self.topic_names[1],self.listener_callback_control_input_change,self.queue_size)
-        self.subscription_rod_state = self.create_subscription(RodState, self.topic_names[2],self.listener_callback_rod_state,self.queue_size)
+        self.subscription_rod_state = self.create_subscription(RodsState, self.topic_names[2],self.listener_callback_rods_state,self.queue_size)
         
         # prevent unused variable warning
         self.subscription_sim_time
@@ -79,50 +79,12 @@ class ElasticaControl(Node):
         
         self.publisher_control_inp.publish(self.control_input_msg)
         
-    def listener_callback_rod_state(self, msg):
+    def listener_callback_rods_state(self, msg):
         if self.print_params: 
-            self.get_logger().info("I heard seg1's position_x: "+ (str(msg.position_x_1.data)))
-            self.get_logger().info("I heard seg1's position_y: "+ (str(msg.position_y_1.data)))
-            self.get_logger().info("I heard seg1's position_z: "+  (str(msg.position_z_1.data)))
-            self.get_logger().info("I heard seg1's velocity_x: "+  (str(msg.velocity_x_1.data)))
-            self.get_logger().info("I heard seg1's velocity_y: "+  (str(msg.velocity_y_1.data)))
-            self.get_logger().info("I heard seg1's velocity_z: "+  (str(msg.velocity_z_1.data)))
-            
-            self.get_logger().info("I heard seg2's position_x: "+ (str(msg.position_x_2.data)))
-            self.get_logger().info("I heard seg2's position_y: "+ (str(msg.position_y_2.data)))
-            self.get_logger().info("I heard seg2's position_z: "+  (str(msg.position_z_2.data)))
-            self.get_logger().info("I heard seg2's velocity_x: "+  (str(msg.velocity_x_2.data)))
-            self.get_logger().info("I heard seg2's velocity_y: "+  (str(msg.velocity_y_2.data)))
-            self.get_logger().info("I heard seg2's velocity_z: "+  (str(msg.velocity_z_2.data)))
-            
-            self.get_logger().info("I heard seg3's position_x: "+ (str(msg.position_x_3.data)))
-            self.get_logger().info("I heard seg3's position_y: "+ (str(msg.position_y_3.data)))
-            self.get_logger().info("I heard seg3's position_z: "+  (str(msg.position_z_3.data)))
-            self.get_logger().info("I heard seg3's velocity_x: "+  (str(msg.velocity_x_3.data)))
-            self.get_logger().info("I heard seg3's velocity_y: "+  (str(msg.velocity_y_3.data)))
-            self.get_logger().info("I heard seg3's velocity_z: "+  (str(msg.velocity_z_3.data)))
-            
-            self.get_logger().info("I heard seg4's position_x: "+ (str(msg.position_x_4.data)))
-            self.get_logger().info("I heard seg4's position_y: "+ (str(msg.position_y_4.data)))
-            self.get_logger().info("I heard seg4's position_z: "+  (str(msg.position_z_4.data)))
-            self.get_logger().info("I heard seg4's velocity_x: "+  (str(msg.velocity_x_4.data)))
-            self.get_logger().info("I heard seg4's velocity_y: "+  (str(msg.velocity_y_4.data)))
-            self.get_logger().info("I heard seg4's velocity_z: "+  (str(msg.velocity_z_4.data)))
-            
-            self.get_logger().info("I heard seg5's position_x: "+ (str(msg.position_x_5.data)))
-            self.get_logger().info("I heard seg5's position_y: "+ (str(msg.position_y_5.data)))
-            self.get_logger().info("I heard seg5's position_z: "+  (str(msg.position_z_5.data)))
-            self.get_logger().info("I heard seg5's velocity_x: "+  (str(msg.velocity_x_5.data)))
-            self.get_logger().info("I heard seg5's velocity_y: "+  (str(msg.velocity_y_5.data)))
-            self.get_logger().info("I heard seg5's velocity_z: "+  (str(msg.velocity_z_5.data)))
-            
-            self.get_logger().info("I heard seg6's position_x: "+ (str(msg.position_x_6.data)))
-            self.get_logger().info("I heard seg6's position_y: "+ (str(msg.position_y_6.data)))
-            self.get_logger().info("I heard seg6's position_z: "+  (str(msg.position_z_6.data)))
-            self.get_logger().info("I heard seg6's velocity_x: "+  (str(msg.velocity_x_6.data)))
-            self.get_logger().info("I heard seg6's velocity_y: "+  (str(msg.velocity_y_6.data)))
-            self.get_logger().info("I heard seg6's velocity_z: "+  (str(msg.velocity_z_6.data)))
-    
+            for i in range(self.no_of_segments):
+                self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rods_state[i].poses)))
+                self.get_logger().info(5*"\n")
+                
         
     def listener_callback_control_input_change(self, msg):
         if self.print_params: 

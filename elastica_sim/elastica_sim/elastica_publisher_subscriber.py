@@ -5,7 +5,7 @@ For creating publishers & subscribers of ros topics for various simulation param
 import numpy as np
 from rclpy.node import Node
 from elastica_msgs.msg import *
-
+from geometry_msgs.msg import PoseStamped
 
 
 
@@ -20,7 +20,7 @@ class ElasticaPublisherSubscriber(Node):
                 ('queue_size', None),
                 ('print_params', None),
                 ('pub_frequency', None),
-                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rod_state','elastica/physical_params'])
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/physical_params'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
@@ -33,12 +33,12 @@ class ElasticaPublisherSubscriber(Node):
         self.control_input = control_input
 
         self.physical_params = PhysicalParams()
-        self.rod_state_msg = RodState()
+        self.all_rods_state_msg = RodsState()
         self.sim_time_msg = SimulationTime()
         
 
         self.publisher_phys_params = self.create_publisher(PhysicalParams, self.topic_names[3], self.queue_size)
-        self.publisher_rod_state = self.create_publisher(RodState, self.topic_names[2], self.queue_size)
+        self.publisher_rods_state = self.create_publisher(RodsState, self.topic_names[2], self.queue_size)
         self.publisher_sim_time  =  self.create_publisher(SimulationTime, self.topic_names[1], self.queue_size)
         
         
@@ -97,78 +97,29 @@ class ElasticaPublisherSubscriber(Node):
         self.physical_params.normal_direction.x = self.sim_params["normal_direction"].tolist()[0]
         self.physical_params.normal_direction.y = self.sim_params["normal_direction"].tolist()[1]
         self.physical_params.normal_direction.z = self.sim_params["normal_direction"].tolist()[2]
-        self.rod_state_msg.orientation_ww_1.data = np.squeeze(self.rod_state[0]["orientation_ww"]).tolist()
-        self.rod_state_msg.orientation_xx_1.data = np.squeeze(self.rod_state[0]["orientation_xx"]).tolist()
-        self.rod_state_msg.orientation_yy_1.data = np.squeeze(self.rod_state[0]["orientation_yy"]).tolist()
-        self.rod_state_msg.orientation_zz_1.data = np.squeeze(self.rod_state[0]["orientation_zz"]).tolist()
-        self.rod_state_msg.position_x_1.data = np.squeeze(self.rod_state[0]["position_x"]).tolist()
-        self.rod_state_msg.position_y_1.data = np.squeeze(self.rod_state[0]["position_y"]).tolist()
-        self.rod_state_msg.position_z_1.data = np.squeeze(self.rod_state[0]["position_z"]).tolist()
-        self.rod_state_msg.velocity_x_1.data = np.squeeze(self.rod_state[0]["velocity_x"]).tolist()
-        self.rod_state_msg.velocity_y_1.data = np.squeeze(self.rod_state[0]["velocity_y"]).tolist()
-        self.rod_state_msg.velocity_z_1.data = np.squeeze(self.rod_state[0]["velocity_z"]).tolist()
-        self.rod_state_msg.orientation_ww_2.data = np.squeeze(self.rod_state[1]["orientation_ww"]).tolist()
-        self.rod_state_msg.orientation_xx_2.data = np.squeeze(self.rod_state[1]["orientation_xx"]).tolist()
-        self.rod_state_msg.orientation_yy_2.data = np.squeeze(self.rod_state[1]["orientation_yy"]).tolist()
-        self.rod_state_msg.orientation_zz_2.data = np.squeeze(self.rod_state[1]["orientation_zz"]).tolist()
-        self.rod_state_msg.position_x_2.data = np.squeeze(self.rod_state[1]["position_x"]).tolist()
-        self.rod_state_msg.position_y_2.data = np.squeeze(self.rod_state[1]["position_y"]).tolist()
-        self.rod_state_msg.position_z_2.data = np.squeeze(self.rod_state[1]["position_z"]).tolist()
-        self.rod_state_msg.velocity_x_2.data = np.squeeze(self.rod_state[1]["velocity_x"]).tolist()
-        self.rod_state_msg.velocity_y_2.data = np.squeeze(self.rod_state[1]["velocity_y"]).tolist()
-        self.rod_state_msg.velocity_z_2.data = np.squeeze(self.rod_state[1]["velocity_z"]).tolist()
-        self.rod_state_msg.orientation_ww_3.data = np.squeeze(self.rod_state[2]["orientation_ww"]).tolist()
-        self.rod_state_msg.orientation_xx_3.data = np.squeeze(self.rod_state[2]["orientation_xx"]).tolist()
-        self.rod_state_msg.orientation_yy_3.data = np.squeeze(self.rod_state[2]["orientation_yy"]).tolist()
-        self.rod_state_msg.orientation_zz_3.data = np.squeeze(self.rod_state[2]["orientation_zz"]).tolist()
-        self.rod_state_msg.position_x_3.data = np.squeeze(self.rod_state[2]["position_x"]).tolist()
-        self.rod_state_msg.position_y_3.data = np.squeeze(self.rod_state[2]["position_y"]).tolist()
-        self.rod_state_msg.position_z_3.data = np.squeeze(self.rod_state[2]["position_z"]).tolist()
-        self.rod_state_msg.velocity_x_3.data = np.squeeze(self.rod_state[2]["velocity_x"]).tolist()
-        self.rod_state_msg.velocity_y_3.data = np.squeeze(self.rod_state[2]["velocity_y"]).tolist()
-        self.rod_state_msg.velocity_z_3.data = np.squeeze(self.rod_state[2]["velocity_z"]).tolist()
-        self.rod_state_msg.orientation_ww_4.data = np.squeeze(self.rod_state[3]["orientation_ww"]).tolist()
-        self.rod_state_msg.orientation_xx_4.data = np.squeeze(self.rod_state[3]["orientation_xx"]).tolist()
-        self.rod_state_msg.orientation_yy_4.data = np.squeeze(self.rod_state[3]["orientation_yy"]).tolist()
-        self.rod_state_msg.orientation_zz_4.data = np.squeeze(self.rod_state[3]["orientation_zz"]).tolist()
-        self.rod_state_msg.position_x_4.data = np.squeeze(self.rod_state[3]["position_x"]).tolist()
-        self.rod_state_msg.position_y_4.data = np.squeeze(self.rod_state[3]["position_y"]).tolist()
-        self.rod_state_msg.position_z_4.data = np.squeeze(self.rod_state[3]["position_z"]).tolist()
-        self.rod_state_msg.velocity_x_4.data = np.squeeze(self.rod_state[3]["velocity_x"]).tolist()
-        self.rod_state_msg.velocity_y_4.data = np.squeeze(self.rod_state[3]["velocity_y"]).tolist()
-        self.rod_state_msg.velocity_z_4.data = np.squeeze(self.rod_state[3]["velocity_z"]).tolist()
-        self.rod_state_msg.orientation_ww_5.data = np.squeeze(self.rod_state[4]["orientation_ww"]).tolist()
-        self.rod_state_msg.orientation_xx_5.data = np.squeeze(self.rod_state[4]["orientation_xx"]).tolist()
-        self.rod_state_msg.orientation_yy_5.data = np.squeeze(self.rod_state[4]["orientation_yy"]).tolist()
-        self.rod_state_msg.orientation_zz_5.data = np.squeeze(self.rod_state[4]["orientation_zz"]).tolist()
-        self.rod_state_msg.position_x_5.data = np.squeeze(self.rod_state[4]["position_x"]).tolist()
-        self.rod_state_msg.position_y_5.data = np.squeeze(self.rod_state[4]["position_y"]).tolist()
-        self.rod_state_msg.position_z_5.data = np.squeeze(self.rod_state[4]["position_z"]).tolist()
-        self.rod_state_msg.velocity_x_5.data = np.squeeze(self.rod_state[4]["velocity_x"]).tolist()
-        self.rod_state_msg.velocity_y_5.data = np.squeeze(self.rod_state[4]["velocity_y"]).tolist()
-        self.rod_state_msg.velocity_z_5.data = np.squeeze(self.rod_state[4]["velocity_z"]).tolist()
-        self.rod_state_msg.orientation_ww_6.data = np.squeeze(self.rod_state[5]["orientation_ww"]).tolist()
-        self.rod_state_msg.orientation_xx_6.data = np.squeeze(self.rod_state[5]["orientation_xx"]).tolist()
-        self.rod_state_msg.orientation_yy_6.data = np.squeeze(self.rod_state[5]["orientation_yy"]).tolist()
-        self.rod_state_msg.orientation_zz_6.data = np.squeeze(self.rod_state[5]["orientation_zz"]).tolist()
-        self.rod_state_msg.position_x_6.data = np.squeeze(self.rod_state[5]["position_x"]).tolist()
-        self.rod_state_msg.position_y_6.data = np.squeeze(self.rod_state[5]["position_y"]).tolist()
-        self.rod_state_msg.position_z_6.data = np.squeeze(self.rod_state[5]["position_z"]).tolist()
-        self.rod_state_msg.velocity_x_6.data = np.squeeze(self.rod_state[5]["velocity_x"]).tolist()
-        self.rod_state_msg.velocity_y_6.data = np.squeeze(self.rod_state[5]["velocity_y"]).tolist()
-        self.rod_state_msg.velocity_z_6.data = np.squeeze(self.rod_state[5]["velocity_z"]).tolist()
+        
+        self.all_rods_state_msg.num_rods = self.sim_params["no_of_segments"]
+        for seg in range(self.sim_params["no_of_segments"]):
+            single_rod_state_msg = RodState()
+            single_rod_state_msg.num_elements = self.sim_params["n_elem"]
+            for elem in range(self.sim_params["n_elem"]):
+                elem_pose = PoseStamped()
+                elem_pose.pose.position.x = np.squeeze(self.rod_state[seg]["position_x"]).tolist()[elem]
+                elem_pose.pose.position.y = np.squeeze(self.rod_state[seg]["position_y"]).tolist()[elem]
+                elem_pose.pose.position.z = np.squeeze(self.rod_state[seg]["position_z"]).tolist()[elem]
+                elem_pose.pose.orientation.w = np.squeeze(self.rod_state[seg]["orientation_ww"]).tolist()[elem]
+                elem_pose.pose.orientation.x = np.squeeze(self.rod_state[seg]["orientation_xx"]).tolist()[elem]
+                elem_pose.pose.orientation.y = np.squeeze(self.rod_state[seg]["orientation_yy"]).tolist()[elem]
+                elem_pose.pose.orientation.z = np.squeeze(self.rod_state[seg]["orientation_zz"]).tolist()[elem]
+                single_rod_state_msg.poses.append(elem_pose)
+            self.all_rods_state_msg.rods_state.append(single_rod_state_msg)
         
         self.sim_time_msg.current_sim_time = self.time_tracker.value
         
         self.publisher_phys_params.publish(self.physical_params)
-        self.publisher_rod_state.publish(self.rod_state_msg)
+        self.publisher_rods_state.publish(self.all_rods_state_msg)
         self.publisher_sim_time.publish(self.sim_time_msg)
         
-
-    # def listener_callback_physical_params(self, msg):
-    #     if self.print_params: self.get_logger().info('I heard rod tip orientation: '+ (str([msg.rod_tip_orientation.w,msg.rod_tip_orientation.x,msg.rod_tip_orientation.y,msg.rod_tip_orientation.z])))
-    
-    
     def listener_callback_control_input(self, msg):
         if self.print_params: 
             self.get_logger().info("I heard control torques "+ (str(msg.control_torques.data)))

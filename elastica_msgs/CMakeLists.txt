@@ -27,6 +27,7 @@ find_package(geometry_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PhysicalParams.msg"
   "msg/RodState.msg"
+  "msg/RodsState.msg"
   "msg/ControlInput.msg"
   "msg/SimulationTime.msg"
   DEPENDENCIES builtin_interfaces std_msgs sensor_msgs geometry_msgs
