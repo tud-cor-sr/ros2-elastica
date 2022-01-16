@@ -3,10 +3,10 @@
 std_msgs/Header header 
 
 #Segment1
-std_msgs/Float64MultiArray rod_tip_orientation_w_1
-std_msgs/Float64MultiArray rod_tip_orientation_x_1
-std_msgs/Float64MultiArray rod_tip_orientation_y_1
-std_msgs/Float64MultiArray rod_tip_orientation_z_1
+std_msgs/Float64MultiArray orientation_ww_1
+std_msgs/Float64MultiArray orientation_xx_1
+std_msgs/Float64MultiArray orientation_yy_1
+std_msgs/Float64MultiArray orientation_zz_1
 
 
 std_msgs/Float64MultiArray position_x_1
@@ -18,10 +18,10 @@ std_msgs/Float64MultiArray velocity_y_1
 std_msgs/Float64MultiArray velocity_z_1
 
 #Segment2
-std_msgs/Float64MultiArray rod_tip_orientation_w_2
-std_msgs/Float64MultiArray rod_tip_orientation_x_2
-std_msgs/Float64MultiArray rod_tip_orientation_y_2
-std_msgs/Float64MultiArray rod_tip_orientation_z_2
+std_msgs/Float64MultiArray orientation_ww_2
+std_msgs/Float64MultiArray orientation_xx_2
+std_msgs/Float64MultiArray orientation_yy_2
+std_msgs/Float64MultiArray orientation_zz_2
 
 std_msgs/Float64MultiArray position_x_2
 std_msgs/Float64MultiArray position_y_2
@@ -32,10 +32,10 @@ std_msgs/Float64MultiArray velocity_y_2
 std_msgs/Float64MultiArray velocity_z_2
 
 #Segment3
-std_msgs/Float64MultiArray rod_tip_orientation_w_3
-std_msgs/Float64MultiArray rod_tip_orientation_x_3
-std_msgs/Float64MultiArray rod_tip_orientation_y_3
-std_msgs/Float64MultiArray rod_tip_orientation_z_3
+std_msgs/Float64MultiArray orientation_ww_3
+std_msgs/Float64MultiArray orientation_xx_3
+std_msgs/Float64MultiArray orientation_yy_3
+std_msgs/Float64MultiArray orientation_zz_3
 
 
 std_msgs/Float64MultiArray position_x_3
@@ -47,10 +47,10 @@ std_msgs/Float64MultiArray velocity_y_3
 std_msgs/Float64MultiArray velocity_z_3
 
 #Segment4
-std_msgs/Float64MultiArray rod_tip_orientation_w_4
-std_msgs/Float64MultiArray rod_tip_orientation_x_4
-std_msgs/Float64MultiArray rod_tip_orientation_y_4
-std_msgs/Float64MultiArray rod_tip_orientation_z_4
+std_msgs/Float64MultiArray orientation_ww_4
+std_msgs/Float64MultiArray orientation_xx_4
+std_msgs/Float64MultiArray orientation_yy_4
+std_msgs/Float64MultiArray orientation_zz_4
 
 
 std_msgs/Float64MultiArray position_x_4
@@ -62,10 +62,10 @@ std_msgs/Float64MultiArray velocity_y_4
 std_msgs/Float64MultiArray velocity_z_4
 
 #Segment5
-std_msgs/Float64MultiArray rod_tip_orientation_w_5
-std_msgs/Float64MultiArray rod_tip_orientation_x_5
-std_msgs/Float64MultiArray rod_tip_orientation_y_5
-std_msgs/Float64MultiArray rod_tip_orientation_z_5
+std_msgs/Float64MultiArray orientation_ww_5
+std_msgs/Float64MultiArray orientation_xx_5
+std_msgs/Float64MultiArray orientation_yy_5
+std_msgs/Float64MultiArray orientation_zz_5
 
 
 std_msgs/Float64MultiArray position_x_5
@@ -77,10 +77,10 @@ std_msgs/Float64MultiArray velocity_y_5
 std_msgs/Float64MultiArray velocity_z_5
 
 #Segment6
-std_msgs/Float64MultiArray rod_tip_orientation_w_6
-std_msgs/Float64MultiArray rod_tip_orientation_x_6
-std_msgs/Float64MultiArray rod_tip_orientation_y_6
-std_msgs/Float64MultiArray rod_tip_orientation_z_6
+std_msgs/Float64MultiArray orientation_ww_6
+std_msgs/Float64MultiArray orientation_xx_6
+std_msgs/Float64MultiArray orientation_yy_6
+std_msgs/Float64MultiArray orientation_zz_6
 
 
 std_msgs/Float64MultiArray position_x_6

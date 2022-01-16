@@ -38,11 +38,11 @@ control_input["control_torque_dir"]  = mp.Array('d', no_of_segments*3)
 
 def rod_state_mp_arr_create(n_segments):
     for i in range(n_segments):
-        #Quaternion form
-        rod_state[i]["rod_tip_orientation_w"] = mp.Array('d',n_elements) 
-        rod_state[i]["rod_tip_orientation_x"] = mp.Array('d',n_elements)
-        rod_state[i]["rod_tip_orientation_y"] = mp.Array('d',n_elements) 
-        rod_state[i]["rod_tip_orientation_z"] = mp.Array('d',n_elements)
+        #Quaternion form (Orientaion of each element, last element of last segment being the Robot arm Tip)
+        rod_state[i]["orientation_ww"] = mp.Array('d',n_elements) 
+        rod_state[i]["orientation_xx"] = mp.Array('d',n_elements)
+        rod_state[i]["orientation_yy"] = mp.Array('d',n_elements) 
+        rod_state[i]["orientation_zz"] = mp.Array('d',n_elements)
 
         # The array is of size 51 according to 'number of elements for Cosserat rod + 1'
         rod_state[i]["position_x"] = mp.Array('d',n_elements+1)    
@@ -184,10 +184,10 @@ class DefineFlagella():
                         qx.append((Q[2, 1] - Q[1, 2]) / (4 * qw[i]))
                         qy.append((Q[0, 2] - Q[2, 0]) / (4 * qw[i]))
                         qz.append((Q[1, 0] - Q[0, 1]) / (4 * qw[i]))
-                    rod_state[self.callback_params]["rod_tip_orientation_w"][:] = qw
-                    rod_state[self.callback_params]["rod_tip_orientation_x"][:] = qx
-                    rod_state[self.callback_params]["rod_tip_orientation_y"][:] = qy
-                    rod_state[self.callback_params]["rod_tip_orientation_z"][:] = qz
+                    rod_state[self.callback_params]["orientation_ww"][:] = qw
+                    rod_state[self.callback_params]["orientation_xx"][:] = qx
+                    rod_state[self.callback_params]["orientation_yy"][:] = qy
+                    rod_state[self.callback_params]["orientation_zz"][:] = qz
                     rod_state[self.callback_params]["position_x"][:] = system.position_collection[0]
                     rod_state[self.callback_params]["position_y"][:] = system.position_collection[1]
                     rod_state[self.callback_params]["position_z"][:] = system.position_collection[2]
