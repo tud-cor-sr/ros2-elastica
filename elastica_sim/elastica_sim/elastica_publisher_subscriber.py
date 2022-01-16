@@ -5,7 +5,7 @@ For creating publishers & subscribers of ros topics for various simulation param
 import numpy as np
 from rclpy.node import Node
 from elastica_msgs.msg import *
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Vector3
 
 
 
@@ -104,6 +104,7 @@ class ElasticaPublisherSubscriber(Node):
             single_rod_state_msg.num_elements = self.sim_params["n_elem"]
             for elem in range(self.sim_params["n_elem"]):
                 elem_pose = PoseStamped()
+                elem_vel = Vector3()
                 elem_pose.pose.position.x = np.squeeze(self.rod_state[seg]["position_x"]).tolist()[elem]
                 elem_pose.pose.position.y = np.squeeze(self.rod_state[seg]["position_y"]).tolist()[elem]
                 elem_pose.pose.position.z = np.squeeze(self.rod_state[seg]["position_z"]).tolist()[elem]
@@ -111,7 +112,11 @@ class ElasticaPublisherSubscriber(Node):
                 elem_pose.pose.orientation.x = np.squeeze(self.rod_state[seg]["orientation_xx"]).tolist()[elem]
                 elem_pose.pose.orientation.y = np.squeeze(self.rod_state[seg]["orientation_yy"]).tolist()[elem]
                 elem_pose.pose.orientation.z = np.squeeze(self.rod_state[seg]["orientation_zz"]).tolist()[elem]
+                elem_vel.x = np.squeeze(self.rod_state[seg]["velocity_x"]).tolist()[elem]
+                elem_vel.y = np.squeeze(self.rod_state[seg]["velocity_y"]).tolist()[elem]
+                elem_vel.z = np.squeeze(self.rod_state[seg]["velocity_z"]).tolist()[elem]
                 single_rod_state_msg.poses.append(elem_pose)
+                single_rod_state_msg.velocity.append(elem_vel)
             self.all_rods_state_msg.rods_state.append(single_rod_state_msg)
         
         self.sim_time_msg.current_sim_time = self.time_tracker.value

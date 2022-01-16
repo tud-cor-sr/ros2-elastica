@@ -83,6 +83,7 @@ class ElasticaControl(Node):
         if self.print_params: 
             for i in range(self.no_of_segments):
                 self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rods_state[i].poses)))
+                self.get_logger().info("I heard seg'"+str(i+1)+"s elements velocity: "+ (str(msg.rods_state[i].velocity)))
                 self.get_logger().info(5*"\n")
                 
         
