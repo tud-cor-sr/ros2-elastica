@@ -147,7 +147,7 @@ class DefineFlagella():
         
         # self.sim_params["muscle_torque_mag"] = muscle_torque_mag_cal(factor, my_spline, angular_frequency, time, self.sim_params["wave_length"], self.sim_params["rest_lengths"])
         # self.sim_params["uniformforces_mag"] = uniformforces_mag_cal(self.sim_params["force"],self.sim_params["direction_UniformForces"], self.sim_params["n_elem"])
-        self.sim_params["uniformtorques_mag"] = uniformtorques_mag_cal(self.sim_params["torque"], self.sim_params["direction_UniformTorques"], self.sim_params["n_elem"], self.sim_params["no_of_segments"])
+        # self.sim_params["uniformtorques_mag"] = uniformtorques_mag_cal(self.sim_params["torque"], self.sim_params["direction_UniformTorques"], self.sim_params["n_elem"], self.sim_params["no_of_segments"])
         
         # Add slender body forces
         fluid_density = 1.0
