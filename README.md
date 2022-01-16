@@ -93,78 +93,80 @@ Here is the description of all the ros topics being published. Most of them are 
 
 ```SlenderBodyTheory``` This slender body theory class is for flow-structure interaction problems. This class applies hydrodynamic forces on the body using the slender body theory given in Eq. 4.13 of Gazzola et al. RSoS (2018).
 
-*So, lets continue with the description values in the ros topics namely /physical_params, /rod_state, /control_input*
+*So, lets continue with the description values in the ros topics namely /elastica/control_input, /elastica/time_tracker, /elastica/rods_state, /elastica/physical_params*
 
-```/acc_gravity``` array 1D (dim) array containing data with 'float' type. Gravitational acceleration vector. (*class GravityForces*) /physical_params
+```/acc_gravity``` array 1D (dim) array containing data with 'float' type. Gravitational acceleration vector. (*class GravityForces*) /elastica/physical_params
 
-```/base_length``` Rest length of the rod-like object (float). (*class*) /physical_params
+```/base_length``` Rest length of the rod-like object (float). (*class*) /elastica/physical_params
 
-```/b_coeff``` optimized coefficients for a snake gait (*class MuscleTorques*) /physical_params
+```/b_coeff``` optimized coefficients for a snake gait (*class MuscleTorques*) /elastica/physical_params
 
-```control_input``` control input/points (varying) for beta spine which determines the muscle torque in normal, binormal & tangential direction /control_input
+```/elastica/control_input``` control input/points (varying) for uniform torque which determines the torque in various segments of continuum robot 
 
-```/direction_of_rod_extension``` array 1D (dim) array containing data with 'float' type. direction in which rod extends (also the Muscle torque direction). /physical_params 
+```/direction_of_rod_extension``` array 1D (dim) array containing data with 'float' type. direction in which rod extends (also the Muscle torque direction). /elastica/physical_params 
 
-```/direction_UniformForces``` array1D (dim) array containing data with 'float' type. Direction in which force applied. (*class UniformForces*) /physical_params
+```/direction_UniformForces``` array1D (dim) array containing data with 'float' type. Direction in which force applied. (*class UniformForces*) /elastica/physical_params
 
-```/direction_UniformTorques``` array 1D (dim) array containing data with 'float' type. Direction in which torque applied. (*class UniformTorques*) /physical_params
+```/direction_UniformTorques``` array 1D (dim) array containing data with 'float' type. Direction in which torque applied. (*class UniformTorques*) /elastica/physical_params
 
-```/dynamic_viscosity``` Dynamic viscosity of the fluid (float) for slender body theory class (for flow-structure interaction problems). (*class SlenderBodyTheory*) /physical_params
+```/dynamic_viscosity``` Dynamic viscosity of the fluid (float) for slender body theory class (for flow-structure interaction problems). (*class SlenderBodyTheory*) /elastica/physical_params
 
-```/end_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to last node of the rod-like object. (*class EndpointForces*) /physical_params
+```/elastica/time_tracker``` Current simulation Time in seconds
 
-```/end_force_mag``` Magnitude of Force applied to last node of the rod-like object (*class EndpointForces*) /physical_params
+```/end_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to last node of the rod-like object. (*class EndpointForces*) /elastica/physical_params
 
-```/force``` float Force magnitude applied to a rod-like object. (*class UniformForces*) /physical_params
+```/end_force_mag``` Magnitude of Force applied to last node of the rod-like object (*class EndpointForces*) /elastica/physical_params
 
-```/muscle_torque_mag``` Magnitude of muscle torque getting applied on each element. (*class MuscleTorques*) /physical_params
+```/force``` float Force magnitude applied to a rod-like object. (*class UniformForces*) /elastica/physical_params
 
-```/normal_direction``` array 1D (dim) array containing data with 'float' type for applying force in normal direction. (*class EndpointForcesSinusodial*) /physical_params
+```/muscle_torque_mag``` Magnitude of muscle torque getting applied on each element. (*class MuscleTorques*) /elastica/physical_params
+
+```/normal_direction``` array 1D (dim) array containing data with 'float' type for applying force in normal direction. (*class EndpointForcesSinusodial*) /elastica/physical_params
+
+```orientation_XX``` rod elements's orientation in quaternion form (last element of last segment being the tip of the continuum robot) /elastica/physical_params
 
 ```/parameter_events``` it provides a way to subscribe to all parameter updates occurring on the node, including addition removal and changes in value. Every atomic change will be published separately. 
 
-```/period``` period of traveling wave in MuscleTorque class (float). (*class MuscleTorques*) /physical_params
+```/period``` period of traveling wave in MuscleTorque class (float). (*class MuscleTorques*) /elastica/physical_params
 
-```/phase_shift``` float, Phase shift of traveling wave. (*class MuscleTorques*) /physical_params
+```/phase_shift``` float, Phase shift of traveling wave. (*class MuscleTorques*) /elastica/physical_params
 
-```position_x``` position of elements in direction of unit vector x /rod_state
+```position_x``` position of elements in direction of unit vector x /elastica/rods_state
  
-```position_y``` position of elements in direction of unit vector y /rod_state
+```position_y``` position of elements in direction of unit vector y /elastica/rods_state
 
-```position_z``` position of elements in direction of unit vector z /rod_state
+```position_z``` position of elements in direction of unit vector z /elastica/rods_state
 
-```/ramp_up_time_EndpointForces``` float ,applied Endpoint Forces are ramped up until ramp up time. (*class EndpointForces*) /physical_params
+```/ramp_up_time_EndpointForces``` float ,applied Endpoint Forces are ramped up until ramp up time. (*class EndpointForces*) /elastica/physical_params
 
-```/ramp_up_time_EndpointForcesSinusoidal``` float ,applied Endpoint Sinusoidal Forces are ramped up until ramp up time. (*class EndpointForcesSinusodial*) /physical_params
+```/ramp_up_time_EndpointForcesSinusoidal``` float ,applied Endpoint Sinusoidal Forces are ramped up until ramp up time. (*class EndpointForcesSinusodial*) /elastica/physical_params
 
-```/ramp_up_time_MuscleTorques``` float ,applied muscle torques are ramped up until ramp up time. (*class MuscleTorques*) /physical_params
+```/ramp_up_time_MuscleTorques``` float ,applied muscle torques are ramped up until ramp up time. (*class MuscleTorques*) /elastica/physical_params
 
-```/rest_lengths``` length of each element at rest. /physical_params
-
-```/rod_tip_orientation``` rod tip's orientation in quaternion form /physical_params
+```/rest_lengths``` length of each element at rest. /elastica/physical_params
 
 ```/rosout``` ROS client libraries are required to publish console logging messages to the /rosout topic as a standard interface. 
 
-```/start_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to first node of the rod-like object. (*class EndpointForces*) /physical_params
+```/start_force``` array 2D (dim, 1) array containing data with 'float' type. Force applied to first node of the rod-like object. (*class EndpointForces*) /elastica/physical_params
 
-```/start_force_mag``` Magnitude of Force applied to first node of the rod-like object (*class EndpointForcesSinusodial*) /physical_params
+```/start_force_mag``` Magnitude of Force applied to first node of the rod-like object (*class EndpointForcesSinusodial*) /elastica/physical_params
 
-```/tangent_direction``` array 1D (dim) array containing data with 'float' type for applying force in tangent direction (*class EndpointForcesSinusodial*) /physical_params
+```/tangent_direction``` array 1D (dim) array containing data with 'float' type for applying force in tangent direction (*class EndpointForcesSinusodial*) /elastica/physical_params
 
-```/torque``` Torque magnitude applied to a rod-like object (float). (*class UniformTorques*) /physical_params
+```/torque``` Torque magnitude applied to a rod-like object (float). (*class UniformTorques*) /elastica/physical_params
 
-```/uniformforces_mag``` Magnitude of uniform forces getting applied on each element. (*class UniformForces*) /physical_params
+```/uniformforces_mag``` Magnitude of uniform forces getting applied on each element. (*class UniformForces*) /elastica/physical_params
 
-```/uniformtorques_mag``` Magnitude of uniform torques getting applied on each element per segment (set of consecutive three elements in vector for each segment ). (*class UniformTorques*) /physical_params
+```/uniformtorques_mag``` Magnitude of uniform torques getting applied on each element per segment (set of consecutive three elements in vector for each segment ). (*class UniformTorques*) /elastica/physical_params
 
-```velocity_x``` velocity of elements in direction of unit vector x /rod_state
+```velocity_x``` velocity of elements in direction of unit vector x /elastica/rods_state
 
-```velocity_y``` velocity of elements in direction of unit vector y /rod_state
+```velocity_y``` velocity of elements in direction of unit vector y /elastica/rods_state
 
-```velocity_z``` velocity of elements in direction of unit vector z /rod_state
+```velocity_z``` velocity of elements in direction of unit vector z /elastica/rods_state
 
-```/wave_length``` Wave length of traveling wave. (float) (*class MuscleTorques*) /physical_params
+```/wave_length``` Wave length of traveling wave. (float) (*class MuscleTorques*) /elastica/physical_params
 
-```/wave_number``` Wave number of traveling wave. (float) (*class MuscleTorques*) /physical_params
+```/wave_number``` Wave number of traveling wave. (float) (*class MuscleTorques*) /elastica/physical_params
 
-```/with_spline``` Option to use beta-spline. (boolean) (*class MuscleTorques*) /physical_params
+```/with_spline``` Option to use beta-spline. (boolean) (*class MuscleTorques*) /elastica/physical_params
