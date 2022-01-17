@@ -64,9 +64,9 @@ class ElasticaControl(Node):
         
         random_torque_dir = []
         for i in range(self.no_of_segments):
-            no_dir_torque_on = np.random.randint(0,4)
-            no_dir_torque_off = 3-no_dir_torque_on
-            random_torque_dir.append(np.array([1.0]*no_dir_torque_on + [0.0]*no_dir_torque_off))
+            num_dir_torque_on = np.random.randint(0,4)
+            num_dir_torque_off = 3-num_dir_torque_on
+            random_torque_dir.append(np.array([1.0]*num_dir_torque_on + [0.0]*num_dir_torque_off))
             np.random.shuffle(random_torque_dir[i])
         
                 
@@ -82,8 +82,8 @@ class ElasticaControl(Node):
     def listener_callback_rods_state(self, msg):
         if self.print_params: 
             for i in range(self.no_of_segments):
-                self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rods_state[i].poses)))
-                self.get_logger().info("I heard seg'"+str(i+1)+"s elements velocity: "+ (str(msg.rods_state[i].velocity)))
+                self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rod_states[i].poses)))
+                self.get_logger().info("I heard seg'"+str(i+1)+"s elements velocity: "+ (str(msg.rod_states[i].velocities)))
                 self.get_logger().info(5*"\n")
                 
         

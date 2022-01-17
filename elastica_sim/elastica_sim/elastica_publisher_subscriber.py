@@ -116,8 +116,8 @@ class ElasticaPublisherSubscriber(Node):
                 elem_vel.y = np.squeeze(self.rod_state[seg]["velocity_y"]).tolist()[elem]
                 elem_vel.z = np.squeeze(self.rod_state[seg]["velocity_z"]).tolist()[elem]
                 single_rod_state_msg.poses.append(elem_pose)
-                single_rod_state_msg.velocity.append(elem_vel)
-            self.all_rods_state_msg.rods_state.append(single_rod_state_msg)
+                single_rod_state_msg.velocities.append(elem_vel)
+            self.all_rods_state_msg.rod_states.append(single_rod_state_msg)
         
         self.sim_time_msg.current_sim_time = self.time_tracker.value
         

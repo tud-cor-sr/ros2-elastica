@@ -6,4 +6,4 @@ std_msgs/Header header
 int64 num_rods
 
 # all the rod states
-RodState[] rods_state
+RodState[] rod_states
