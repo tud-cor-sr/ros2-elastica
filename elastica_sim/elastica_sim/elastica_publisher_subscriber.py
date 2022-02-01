@@ -12,7 +12,7 @@ from geometry_msgs.msg import PoseStamped, Vector3
 ##########ROS2######################################################
 class ElasticaPublisherSubscriber(Node):
     
-    def __init__(self, sim_params, rod_state, time_tracker, control_input):
+    def __init__(self, sim_params, rod_state, time_tracker, control_input, objs_state, obj_ids):
         super().__init__('elastica_pub_sub')
         self.declare_parameters(
             namespace='',
@@ -20,7 +20,7 @@ class ElasticaPublisherSubscriber(Node):
                 ('queue_size', None),
                 ('print_params', None),
                 ('pub_frequency', None),
-                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/physical_params'])
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/physical_params', 'elastica/objs_state'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
@@ -31,15 +31,20 @@ class ElasticaPublisherSubscriber(Node):
         self.rod_state = rod_state
         self.count = 0
         self.control_input = control_input
+        self.objs_state = objs_state
+        self.obj_ids = obj_ids
 
         self.physical_params = PhysicalParams()
         self.all_rods_state_msg = RodsState()
         self.sim_time_msg = SimulationTime()
+
+        self.all_objs_state_msg = ObjsState()
         
 
         self.publisher_phys_params = self.create_publisher(PhysicalParams, self.topic_names[3], self.queue_size)
         self.publisher_rods_state = self.create_publisher(RodsState, self.topic_names[2], self.queue_size)
         self.publisher_sim_time  =  self.create_publisher(SimulationTime, self.topic_names[1], self.queue_size)
+        self.publisher_objs_state = self.create_publisher(ObjsState, self.topic_names[4], self.queue_size)
         
         
         self.time_tracker = time_tracker
@@ -52,44 +57,28 @@ class ElasticaPublisherSubscriber(Node):
         # prevent unused variable warning
         self.subscription_ctrl_inp
 
-    def timer_callback(self):
-        
- 
+        self.all_objs_state_msg.num_objects = self.sim_params["no_of_objects"]
+        self.all_objs_state_msg.obj_names = ','.join(self.obj_ids)
+        self.all_rods_state_msg.num_rods = self.sim_params["no_of_segments"]
+     
         self.physical_params.b_coeff.data  = self.sim_params["b_coeff"].tolist()
         self.physical_params.period = self.sim_params["period"]
         self.physical_params.wave_length = self.sim_params["wave_length"]
         self.physical_params.base_length = self.sim_params["base_length"]
         self.physical_params.phase_shift = self.sim_params["phase_shift"]
-        # self.physical_params.rest_lengths.data = self.sim_params["rest_lengths"]
         self.physical_params.ramp_up_time_muscle_torques = self.sim_params["ramp_up_time_MuscleTorques"]
         self.physical_params.direction_of_rod_extension.x = self.sim_params["direction_of_rod_extension"].tolist()[0]
         self.physical_params.direction_of_rod_extension.y = self.sim_params["direction_of_rod_extension"].tolist()[1]
         self.physical_params.direction_of_rod_extension.z = self.sim_params["direction_of_rod_extension"].tolist()[2]
-        self.physical_params.with_spline = self.sim_params["with_spline"]
-        # self.physical_params.muscle_torque_mag.data = self.sim_params["muscle_torque_mag"].tolist()
-        self.physical_params.force = self.sim_params["force"]
+        self.physical_params.with_spline = self.sim_params["with_spline"] 
         self.physical_params.direction_uniform_forces.x = self.sim_params["direction_UniformForces"].tolist()[0]
         self.physical_params.direction_uniform_forces.y = self.sim_params["direction_UniformForces"].tolist()[1]
         self.physical_params.direction_uniform_forces.z = self.sim_params["direction_UniformForces"].tolist()[2]
-        # self.physical_params.uniformforces_mag.data = np.squeeze(self.sim_params["uniformforces_mag"]).tolist()
-        # self.physical_params.torque = self.sim_params["torque"]
-        # self.physical_params.direction_uniform_torques.x = self.sim_params["direction_UniformTorques"].tolist()[0]
-        # self.physical_params.direction_uniform_torques.y = self.sim_params["direction_UniformTorques"].tolist()[1]
-        # self.physical_params.direction_uniform_torques.z = self.sim_params["direction_UniformTorques"].tolist()[2]
-        self.physical_params.uniformtorques_mag.data = (np.array(self.sim_params["uniformtorques_mag"]).ravel()).tolist()
-        self.physical_params.start_force.force.x = self.sim_params["start_force"].tolist()[0]
-        self.physical_params.start_force.force.y = self.sim_params["start_force"].tolist()[1]
-        self.physical_params.start_force.force.z = self.sim_params["start_force"].tolist()[2]
-        self.physical_params.end_force.force.x = self.sim_params["end_force"].tolist()[0]
-        self.physical_params.end_force.force.y = self.sim_params["end_force"].tolist()[1]
-        self.physical_params.end_force.force.z = self.sim_params["end_force"].tolist()[2]
         self.physical_params.ramp_up_time_endpoint_forces = self.sim_params["ramp_up_time_EndpointForces"]
         self.physical_params.acc_gravity.linear.x = self.sim_params["acc_gravity"].tolist()[0]
         self.physical_params.acc_gravity.linear.y = self.sim_params["acc_gravity"].tolist()[1]
         self.physical_params.acc_gravity.linear.z = self.sim_params["acc_gravity"].tolist()[2]
         self.physical_params.dynamic_viscosity = self.sim_params["dynamic_viscosity"]
-        self.physical_params.start_force_mag = self.sim_params["start_force_mag"]
-        self.physical_params.end_force_mag = self.sim_params["end_force_mag"]
         self.physical_params.ramp_up_time_endpoint_forces_sinusoidal = self.sim_params["ramp_up_time_EndpointForcesSinusoidal"]
         self.physical_params.tangent_direction.x = self.sim_params["tangent_direction"].tolist()[0]
         self.physical_params.tangent_direction.y = self.sim_params["tangent_direction"].tolist()[1]
@@ -97,8 +86,21 @@ class ElasticaPublisherSubscriber(Node):
         self.physical_params.normal_direction.x = self.sim_params["normal_direction"].tolist()[0]
         self.physical_params.normal_direction.y = self.sim_params["normal_direction"].tolist()[1]
         self.physical_params.normal_direction.z = self.sim_params["normal_direction"].tolist()[2]
+    
+    def timer_callback(self):
         
-        self.all_rods_state_msg.num_rods = self.sim_params["no_of_segments"]
+        self.physical_params.force = self.sim_params["force"]
+        self.physical_params.uniformtorques_mag.data = (np.array(self.sim_params["uniformtorques_mag"]).ravel()).tolist()
+        self.physical_params.start_force.force.x = self.sim_params["start_force"].tolist()[0]
+        self.physical_params.start_force.force.y = self.sim_params["start_force"].tolist()[1]
+        self.physical_params.start_force.force.z = self.sim_params["start_force"].tolist()[2]
+        self.physical_params.end_force.force.x = self.sim_params["end_force"].tolist()[0]
+        self.physical_params.end_force.force.y = self.sim_params["end_force"].tolist()[1]
+        self.physical_params.end_force.force.z = self.sim_params["end_force"].tolist()[2]
+        self.physical_params.start_force_mag = self.sim_params["start_force_mag"]
+        self.physical_params.end_force_mag = self.sim_params["end_force_mag"]
+
+
         for seg in range(self.sim_params["no_of_segments"]):
             single_rod_state_msg = RodState()
             single_rod_state_msg.num_elements = self.sim_params["n_elem"]
@@ -119,11 +121,23 @@ class ElasticaPublisherSubscriber(Node):
                 single_rod_state_msg.velocities.append(elem_vel)
             self.all_rods_state_msg.rod_states.append(single_rod_state_msg)
         
+        
+        for obj in range(self.sim_params["no_of_objects"]):
+            obj_pose = PoseStamped()
+            obj_pose.pose.position.x, obj_pose.pose.position.y, \
+            obj_pose.pose.position.z = np.squeeze(self.objs_state[obj][str(self.obj_ids[obj])+"_position"]).tolist()
+            
+            obj_pose.pose.orientation.w, obj_pose.pose.orientation.x, obj_pose.pose.orientation.y,\
+            obj_pose.pose.orientation.z = np.squeeze(self.objs_state[obj][str(self.obj_ids[obj])+"_orientation_ww_xx_yy_zz"]).tolist()
+            
+            self.all_objs_state_msg.obj_poses.append(obj_pose)
+        
         self.sim_time_msg.current_sim_time = self.time_tracker.value
         
         self.publisher_phys_params.publish(self.physical_params)
         self.publisher_rods_state.publish(self.all_rods_state_msg)
         self.publisher_sim_time.publish(self.sim_time_msg)
+        self.publisher_objs_state.publish(self.all_objs_state_msg)
         
     def listener_callback_control_input(self, msg):
         if self.print_params: 

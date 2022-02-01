@@ -21,7 +21,7 @@ class ElasticaControl(Node):
                 ('queue_size', None),
                 ('print_params', None),
                 ('pub_frequency', None),
-                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state'])
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/objs_state'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
@@ -29,6 +29,7 @@ class ElasticaControl(Node):
         self.topic_names = self.get_parameter('topic_names').get_parameter_value().string_array_value
         
         self.no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
+        self.no_of_objects = 1 #Number of objects simualted in ELastica
         self.count = 0
 
         self.control_input_msg = ControlInput()
@@ -43,10 +44,12 @@ class ElasticaControl(Node):
         
         self.subscription_sim_time = self.create_subscription(SimulationTime,self.topic_names[1],self.listener_callback_control_input_change,self.queue_size)
         self.subscription_rod_state = self.create_subscription(RodsState, self.topic_names[2],self.listener_callback_rods_state,self.queue_size)
+        self.subscription_objs_state = self.create_subscription(ObjsState, self.topic_names[3],self.listener_callback_objs_state,self.queue_size)
         
         # prevent unused variable warning
         self.subscription_sim_time
         self.subscription_rod_state
+        self.subscription_objs_state
         
         
     def sampleControlTorque(self):
@@ -81,9 +84,16 @@ class ElasticaControl(Node):
         
     def listener_callback_rods_state(self, msg):
         if self.print_params: 
-            for i in range(self.no_of_segments):
+            for i in range(msg.num_rods):
                 self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rod_states[i].poses)))
                 self.get_logger().info("I heard seg'"+str(i+1)+"s elements velocity: "+ (str(msg.rod_states[i].velocities)))
+                self.get_logger().info(5*"\n")
+    
+    def listener_callback_objs_state(self, msg):
+        obj_names = msg.obj_names.split(',')
+        if self.print_params: 
+            for i in range(msg.num_objects):
+                self.get_logger().info("I heard "+obj_names[i]+"'s pose: "+ (str(msg.obj_poses[i])))
                 self.get_logger().info(5*"\n")
                 
         

@@ -93,15 +93,13 @@ Here is the description of all the ros topics being published. Most of them are 
 
 ```SlenderBodyTheory``` This slender body theory class is for flow-structure interaction problems. This class applies hydrodynamic forces on the body using the slender body theory given in Eq. 4.13 of Gazzola et al. RSoS (2018).
 
-*So, lets continue with the description values in the ros topics namely /elastica/control_input, /elastica/time_tracker, /elastica/rods_state, /elastica/physical_params*
+*So, lets continue with the description values in the ros topics namely /elastica/control_input, /elastica/time_tracker, /elastica/rods_state, /elastica/physical_params,  '/elastica/objs_state'*
 
 ```/acc_gravity``` array 1D (dim) array containing data with 'float' type. Gravitational acceleration vector. (*class GravityForces*) /elastica/physical_params
 
 ```/base_length``` Rest length of the rod-like object (float). (*class*) /elastica/physical_params
 
 ```/b_coeff``` optimized coefficients for a snake gait (*class MuscleTorques*) /elastica/physical_params
-
-```/elastica/control_input``` control input/points (varying) for uniform torque which determines the torque in various segments of continuum robot 
 
 ```/direction_of_rod_extension``` array 1D (dim) array containing data with 'float' type. direction in which rod extends (also the Muscle torque direction). /elastica/physical_params 
 
@@ -110,6 +108,10 @@ Here is the description of all the ros topics being published. Most of them are 
 ```/direction_UniformTorques``` array 1D (dim) array containing data with 'float' type. Direction in which torque applied. (*class UniformTorques*) /elastica/physical_params
 
 ```/dynamic_viscosity``` Dynamic viscosity of the fluid (float) for slender body theory class (for flow-structure interaction problems). (*class SlenderBodyTheory*) /elastica/physical_params
+
+```/elastica/control_input``` control input/points (varying) for uniform torque which determines the torque in various segments of continuum robot 
+
+```/elastica/objs_state``` pose adn description of the objects in the environment
 
 ```/elastica/time_tracker``` Current simulation Time in seconds
 

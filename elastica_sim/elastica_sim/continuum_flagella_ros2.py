@@ -9,6 +9,7 @@ import pickle
 from elastica.timestepper import extend_stepper_interface
 from elastica._calculus import _isnan_check
 from tqdm import tqdm
+import copy
 
 # FIXME without appending sys.path make it more generic
 # sys.path.append("../../")
@@ -28,15 +29,19 @@ from elastica_sim.elastica_publisher_subscriber import *
 from elastica_sim.utils import *
 
 no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
+no_of_objs = 1 # Number of objects  to simulate
 n_elements = 50 #number of elements for Cosserat rod
 rod_state = [defaultdict(list)]*no_of_segments
+
+objs_state = [defaultdict(list)]*no_of_objs
+obj_ids = ["sphere1"]
 
 control_input = defaultdict(list)
 
 control_input["control_torque"]  = mp.Array('d', no_of_segments)
 control_input["control_torque_dir"]  = mp.Array('d', no_of_segments*3)
 
-def rod_state_mp_arr_create(n_segments):
+def rod_state_mp_arr_create(n_segments, n_objs):
     for i in range(n_segments):
         #Quaternion form (Orientaion of each element, last element of last segment being the Robot arm Tip)
         rod_state[i]["orientation_ww"] = mp.Array('d',n_elements) 
@@ -51,8 +56,16 @@ def rod_state_mp_arr_create(n_segments):
         rod_state[i]["velocity_x"] = mp.Array('d',n_elements+1)
         rod_state[i]["velocity_y"] = mp.Array('d',n_elements+1)
         rod_state[i]["velocity_z"] = mp.Array('d',n_elements+1)
+    
+    for i in range(n_objs):
+        # The array is of size (3,) with position of the fixed object
+        objs_state[i][str(obj_ids[i])+"_position"] = mp.Array('d',3)   
 
-rod_state_mp_arr_create(no_of_segments)
+        # The array is of size (4,) with orientation (quaternion) of the fixed object
+        objs_state[i][str(obj_ids[i])+"_orientation_ww_xx_yy_zz"] = mp.Array('d',4)
+ 
+        
+rod_state_mp_arr_create(no_of_segments, no_of_objs)
 
 class FlagellaSimulator(BaseSystemCollection, Connections, Constraints, Forcing, CallBacks):
     pass
@@ -76,7 +89,8 @@ class DefineFlagella():
         self.sim_params["time_step"] = np.float64(float(self.sim_params["final_time"]) / self.sim_params["total_steps"])
         self.sim_params["step_skip"] = int(1.0 / (rendering_fps * self.sim_params["time_step"]))
         self.sim_params["max_rate_of_change_of_activation"] = np.infty
-        self.sim_params["no_of_segments"] = 6
+        self.sim_params["no_of_segments"] = no_of_segments
+        self.sim_params["no_of_objects"] = no_of_objs
         
         self.flagella_sim = FlagellaSimulator()
          # setting up test params
@@ -95,6 +109,41 @@ class DefineFlagella():
         self.sim_params["radius_base"] = 0.05  # radius of the rod at the base
 
         self.sim_params["radius_along_rod"] = np.linspace(self.sim_params["radius_base"], self.sim_params["radius_tip"], self.sim_params["n_elem"])
+
+        self.sim_params[str(obj_ids[0])+"_obj_position"] = [-0.4, 0.6, 0.2]
+
+        # Rigid sphere initialization
+        self.sphere = Sphere(
+            center=self.sim_params[str(obj_ids[0])+"_obj_position"],  # initialize target position of the sphere
+            base_radius=0.05,
+            density=1000,
+        )
+        theta_x = 0
+        theta_y = np.pi / 4
+        theta_z = 0
+        #orientation of sphere object
+        theta = np.array([theta_x, theta_y, theta_z])
+
+        R = np.array(
+            [[-np.sin(theta[1]),
+            np.sin(theta[0]) * np.cos(theta[1]),
+            np.cos(theta[0]) * np.cos(theta[1]),],
+            [np.cos(theta[1]) * np.cos(theta[2]),
+            np.sin(theta[0]) * np.sin(theta[1]) * np.cos(theta[2])
+            - np.sin(theta[2]) * np.cos(theta[0]),
+            np.sin(theta[1]) * np.cos(theta[0]) * np.cos(theta[2])
+            + np.sin(theta[0]) * np.sin(theta[2]),],
+            [np.sin(theta[2]) * np.cos(theta[1]),
+            np.sin(theta[0]) * np.sin(theta[1]) * np.sin(theta[2])
+            + np.cos(theta[0]) * np.cos(theta[2]),
+            np.sin(theta[1]) * np.sin(theta[2]) * np.cos(theta[0])
+            -np.sin(theta[0]) * np.cos(theta[2]),],])
+
+        self.sphere.director_collection[..., 0] = R
+        self.objs = np.array([None]*self.sim_params["no_of_objects"])
+        self.objs[0] = self.sphere
+
+        self.flagella_sim.append(self.sphere)
 
         # Pneumatic Segments creation
         self.shearable_rods = self.segment_creation()
@@ -164,7 +213,7 @@ class DefineFlagella():
         # Add call backs
         class ContinuumFlagellaCallBack(CallBackBaseClass):
             """
-            Call back function for continuum snake
+            Call back function for segmeted continuum robot arm
             """
 
             def __init__(self, step_skip: int, callback_params: dict):
@@ -195,8 +244,6 @@ class DefineFlagella():
                     rod_state[self.callback_params]["velocity_y"][:] = system.velocity_collection[1]
                     rod_state[self.callback_params]["velocity_z"][:] = system.velocity_collection[2]
                     
-                    
-                    
                     if time >= 10.0:
                         pp_list_file = open("continuum_flagella_"+str((self.callback_params+1))+".dat", "wb")
                         pickle.dump(self.pp_list_copy[self.callback_params], pp_list_file)
@@ -218,12 +265,57 @@ class DefineFlagella():
                     )
 
                     return
-        
-                        
+
+        class RigidSphereCallBack(CallBackBaseClass):
+            """
+            Call back function for target objects
+            """
+
+            def __init__(self, step_skip: int, callback_params: dict):
+                self.every = step_skip
+                self.callback_params = callback_params
+                self.pp_list_copy = [defaultdict(list)]*no_of_objs
+
+            def make_callback(self, system, time, current_step: int):
+                if current_step % self.every == 0:
+                    Q = system.director_collection[..., 0]
+                    qw = (np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2)
+                    qx = ((Q[2, 1] - Q[1, 2]) / (4 * qw))
+                    qy = ((Q[0, 2] - Q[2, 0]) / (4 * qw))
+                    qz = ((Q[1, 0] - Q[0, 1]) / (4 * qw))
+                    objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_orientation_ww_xx_yy_zz"][:] = np.array([qw,qx,qy,qz])
+                    objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_position"][:] = system.position_collection
+                    
+                    if time >= 10.0:
+                        pp_list_file = open(obj_ids[self.callback_params]+".dat", "wb")
+                        pickle.dump(self.pp_list_copy[self.callback_params], pp_list_file)
+                        pp_list_file.close()
+
+                    self.pp_list_copy[self.callback_params]["time"].append(time)
+                    self.pp_list_copy[self.callback_params]["step"].append(current_step)
+                    self.pp_list_copy[self.callback_params]["position"].append(
+                        system.position_collection.copy()
+                    )
+                    self.pp_list_copy[self.callback_params]["directors"].append(
+                        system.director_collection.copy()
+                    )
+                    self.pp_list_copy[self.callback_params]["radius"].append(copy.deepcopy(system.radius))
+                    self.pp_list_copy[self.callback_params]["com"].append(
+                        system.compute_position_center_of_mass()
+                    )
+                    return
+
+
+
+
         self.pp_list = range(self.sim_params["no_of_segments"])
+        self.pp_list_objs = range(self.sim_params["no_of_objects"])
         
         for i in range(self.sim_params["no_of_segments"]) : self.flagella_sim.collect_diagnostics(self.shearable_rods[i]).using(
                                                             ContinuumFlagellaCallBack, step_skip=200, callback_params=self.pp_list[i]
+                                                        )
+        for i in range(self.sim_params["no_of_objects"]) : self.flagella_sim.collect_diagnostics(self.objs[i]).using(
+                                                            RigidSphereCallBack, step_skip=200, callback_params=self.pp_list_objs[i]
                                                         )
         self.flagella_sim.finalize()
         # do_step, stages_and_updates will be used in step function
@@ -267,11 +359,19 @@ class DefineFlagella():
         # Checking for NaN positon of the rod. If so, stop the simulation
         for i in range(self.sim_params["no_of_segments"]) : invalid_values_condition.append(_isnan_check(self.shearable_rods[i].position_collection))
 
+        # Checking for NaN positon of the objects. If so, stop the simulation
+        for i in range(self.sim_params["no_of_objects"]) : invalid_values_condition.append(_isnan_check(self.objs[i].position_collection))
+
+
         if any(invalid_values_condition) == True:
             print(" NaN detected, will exit the simulation")
             for i in range(self.sim_params["no_of_segments"]) :
                 self.shearable_rods[i].position_collection = np.zeros(
                     self.shearable_rods[i].position_collection.shape
+                )
+            for i in range(self.sim_params["no_of_objects"]) :
+                self.objs[i].position_collection = np.zeros(
+                    self.objs[i].position_collection.shape
                 )
             done = True
         return done
@@ -300,7 +400,7 @@ def run_flagella(
     def ros_node():
         rclpy.init(args=None)
         
-        elastica_pub_sub = ElasticaPublisherSubscriber(flagella_run.sim_params, rod_state,flagella_run.time_tracker,control_input)
+        elastica_pub_sub = ElasticaPublisherSubscriber(flagella_run.sim_params, rod_state,flagella_run.time_tracker,control_input, objs_state, obj_ids)
         rclpy.spin(elastica_pub_sub)
         
 
@@ -324,15 +424,26 @@ def run_flagella(
         if os.path.exists("continuum_flagella_"+str((i+1))+".dat"):
             pp_list_file = open("continuum_flagella_"+str((i+1))+".dat", "rb")
             pp_list.append(pickle.load(pp_list_file))
+
+    pp_list_objs = []
+    for i in range(no_of_objs):
+        if os.path.exists(obj_ids[i]+".dat"):
+            pp_list_objs_file = open(obj_ids[i]+".dat", "rb")
+            pp_list_objs.append(pickle.load(pp_list_objs_file))
     
     if PLOT_FIGURE:
         for i in range(no_of_segments):
             filename_plot = "continuum_flagella_velocity_"+str((i+1))+".png"
             plot_velocity(pp_list[i], flagella_run.sim_params["period"], filename_plot, SAVE_FIGURE)
 
-        if SAVE_VIDEO:
+    if SAVE_VIDEO:
+        for i in range(no_of_segments):
             filename_video = "continuum_flagella_"+str((i+1))+".mp4"
             plot_video(pp_list[i], video_name=filename_video, margin=0.2, fps=200)
+        for i in range(no_of_objs):
+            filename_video = obj_ids[i]+".mp4"
+            plot_video(pp_list_objs[i], video_name=filename_video, margin=0.2, fps=200)
+        
 
     if SAVE_RESULTS:
         pass
@@ -341,6 +452,11 @@ def run_flagella(
         for i in range(no_of_segments):
             if os.path.exists("continuum_flagella_"+str((i+1))+".dat"):
                 os.remove("continuum_flagella_"+str((i+1))+".dat")
+            else:
+                print("The file does not exist")
+        for i in range(no_of_objs):
+            if os.path.exists(obj_ids[i]+".dat"):
+                os.remove(obj_ids[i]+".dat")
             else:
                 print("The file does not exist")
 
@@ -352,7 +468,7 @@ def run_flagella(
     
 def main():
     # Options
-    PLOT_FIGURE = True
+    PLOT_FIGURE = False
     SAVE_FIGURE = False
     SAVE_VIDEO = False
     SAVE_RESULTS = False

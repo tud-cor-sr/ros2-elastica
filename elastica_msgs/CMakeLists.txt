@@ -30,6 +30,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RodsState.msg"
   "msg/ControlInput.msg"
   "msg/SimulationTime.msg"
+  "msg/ObjsState.msg"
   DEPENDENCIES builtin_interfaces std_msgs sensor_msgs geometry_msgs
  )
 
