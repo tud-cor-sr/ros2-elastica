@@ -3,7 +3,7 @@
 <package format="3">
   <name>elastica_kinematics</name>
   <version>0.0.1</version>
-  <description>ROS2 package for Kinematics of Cosserat Rods assembled in PyElastica</description>
+  <description>ROS2 package for Kinematics (PCC Kinematic State) of Cosserat Rods assembled in PyElastica</description>
   <maintainer email="prakarshkaushik369@gmail.com">root</maintainer>
   <license>MIT license</license>
 
