@@ -35,7 +35,7 @@ no_of_objs = 1 # Number of objects  to simulate
 def create_data_structs(size, data_struct): 
     '''
     Objects with same id were creating data storage issues, i.e., 
-    shared their values (reason being same id is a posible explanation and to solve the issue this function is coded)
+    shared their values (reason being same id is a temporary explanation and to solve the issue this function is coded)
     The error appeared the step of new pneumatic actuation model for multiple segments
     '''
     data_struct = []
