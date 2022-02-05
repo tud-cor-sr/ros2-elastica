@@ -32,14 +32,14 @@ no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
 no_of_objs = 1 # Number of objects  to simulate
 n_elements = 50 #number of elements for Cosserat rod
 
-def create_data_structs(size, data_struct): 
+def create_data_structs(size, data_struct_name): 
     '''
     Objects with same id were creating data storage issues, i.e., 
     shared their values (reason being same id is a temporary explanation and to solve the issue this function is coded)
     The error appeared the step of new pneumatic actuation model for multiple segments
     '''
     data_struct = []
-    for _ in range(size): data_struct.append(eval(data_struct)) 
+    for _ in range(size): data_struct.append(eval(data_struct_name)) 
     return data_struct
 
 
