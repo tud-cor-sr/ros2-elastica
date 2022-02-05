@@ -31,9 +31,20 @@ from elastica_sim.utils import *
 no_of_segments = 6 #Number of Pneumatic chambers in the Continuum robot arm
 n_elements = 50 #number of elements for Cosserat rod
 no_of_objs = 1 # Number of objects  to simulate
-rod_state = [defaultdict(list)]*no_of_segments
 
-objs_state = [defaultdict(list)]*no_of_objs
+def create_data_structs(size, data_struct): 
+    '''
+    Objects with same id were creating data storage issues, i.e., 
+    shared their values (reason being same id is a posible explanation and to solve the issue this function is coded)
+    The error appeared the step of new pneumatic actuation model for multiple segments
+    '''
+    data_struct = []
+    for _ in range(size): data_struct.append(eval(data_struct)) 
+    return data_struct
+
+rod_state = create_data_structs(no_of_segments,"defaultdict(list)")
+
+objs_state = create_data_structs(no_of_objs,"defaultdict(list)")  
 obj_ids = ["sphere1"]
 
 control_input = defaultdict(list)
@@ -138,7 +149,7 @@ class DefineSnake():
             -np.sin(theta[0]) * np.cos(theta[2]),],])
 
         self.sphere.director_collection[..., 0] = R
-        self.objs = np.array([None]*self.sim_params["no_of_objects"])
+        self.objs = np.array(create_data_structs(self.sim_params["no_of_objects"],"None"))
         self.objs[0] = self.sphere
 
         self.snake_sim.append(self.sphere)
@@ -166,7 +177,7 @@ class DefineSnake():
                                                         )
         
         self.control_inp_torque = (np.random.rand(self.sim_params["no_of_segments"]))
-        self.control_inp_torque_dir = np.array([[0.0, 0.0, 0.0]]*self.sim_params["no_of_segments"])  # Number_of_segments X No_of_directions
+        self.control_inp_torque_dir = np.array(create_data_structs(self.sim_params["no_of_segments"],"[0.0, 0.0, 0.0]"))  # Number_of_segments X No_of_directions
         # Apply torques
         for i in range(self.sim_params["no_of_segments"]) : self.snake_sim.add_forcing_to(self.shearable_rods[i]).using(
                                                             UniformTorques,
@@ -239,7 +250,7 @@ class DefineSnake():
                 CallBackBaseClass.__init__(self)
                 self.every = step_skip
                 self.callback_params = callback_params
-                self.pp_list_copy = [defaultdict(list)]*no_of_segments
+                self.pp_list_copy = create_data_structs(no_of_segments,"defaultdict(list)")
 
                 
 
@@ -294,7 +305,7 @@ class DefineSnake():
             def __init__(self, step_skip: int, callback_params: dict):
                 self.every = step_skip
                 self.callback_params = callback_params
-                self.pp_list_copy = [defaultdict(list)]*no_of_objs
+                self.pp_list_copy = create_data_structs(no_of_objs,"defaultdict(list)")
 
             def make_callback(self, system, time, current_step: int):
                 if current_step % self.every == 0:
@@ -342,7 +353,7 @@ class DefineSnake():
                             )
         
     def segment_creation(self):
-        shearable_rods =  np.array([None]*self.sim_params["no_of_segments"])
+        shearable_rods =  np.array(create_data_structs(self.sim_params["no_of_segments"],"None"))
         
         for i in range(self.sim_params["no_of_segments"]):
             shearable_rods[i] = CosseratRod.straight_rod(self.sim_params["n_elem"], self.sim_params["start"],self.sim_params["direction_of_rod_extension"], 
@@ -391,7 +402,7 @@ class DefineSnake():
         return done
     
 control_input["control_torque"][:] = (np.random.rand(no_of_segments))
-control_input["control_torque_dir"][:] = np.array([[0.0, 0.0, 0.0]]*no_of_segments).ravel()
+control_input["control_torque_dir"][:] = np.array(create_data_structs(no_of_segments,"[0.0, 0.0, 0.0]")).ravel()
 
     
 def run_snake(
