@@ -9,3 +9,5 @@ int64 num_elements
 geometry_msgs/PoseStamped[] poses
 geometry_msgs/Vector3[] velocities
 
+# curvature (kappa) of the Cosserat rod
+geometry_msgs/Vector3[] kappa

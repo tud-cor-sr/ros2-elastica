@@ -104,21 +104,28 @@ class ElasticaPublisherSubscriber(Node):
         for seg in range(self.sim_params["no_of_segments"]):
             single_rod_state_msg = RodState()
             single_rod_state_msg.num_elements = self.sim_params["n_elem"]
-            for elem in range(self.sim_params["n_elem"]):
+            for elem in range(self.sim_params["n_elem"]+1):
                 elem_pose = PoseStamped()
                 elem_vel = Vector3()
+                kappa = Vector3()
                 elem_pose.pose.position.x = np.squeeze(self.rod_state[seg]["position_x"]).tolist()[elem]
                 elem_pose.pose.position.y = np.squeeze(self.rod_state[seg]["position_y"]).tolist()[elem]
                 elem_pose.pose.position.z = np.squeeze(self.rod_state[seg]["position_z"]).tolist()[elem]
-                elem_pose.pose.orientation.w = np.squeeze(self.rod_state[seg]["orientation_ww"]).tolist()[elem]
-                elem_pose.pose.orientation.x = np.squeeze(self.rod_state[seg]["orientation_xx"]).tolist()[elem]
-                elem_pose.pose.orientation.y = np.squeeze(self.rod_state[seg]["orientation_yy"]).tolist()[elem]
-                elem_pose.pose.orientation.z = np.squeeze(self.rod_state[seg]["orientation_zz"]).tolist()[elem]
+                if elem < self.sim_params["n_elem"]:
+                    elem_pose.pose.orientation.w = np.squeeze(self.rod_state[seg]["orientation_ww"]).tolist()[elem]
+                    elem_pose.pose.orientation.x = np.squeeze(self.rod_state[seg]["orientation_xx"]).tolist()[elem]
+                    elem_pose.pose.orientation.y = np.squeeze(self.rod_state[seg]["orientation_yy"]).tolist()[elem]
+                    elem_pose.pose.orientation.z = np.squeeze(self.rod_state[seg]["orientation_zz"]).tolist()[elem]
                 elem_vel.x = np.squeeze(self.rod_state[seg]["velocity_x"]).tolist()[elem]
                 elem_vel.y = np.squeeze(self.rod_state[seg]["velocity_y"]).tolist()[elem]
                 elem_vel.z = np.squeeze(self.rod_state[seg]["velocity_z"]).tolist()[elem]
+                if elem < self.sim_params["n_elem"]-1:
+                    kappa.x = np.squeeze(self.rod_state[seg]["kappa_vec_x"]).tolist()[elem]
+                    kappa.y = np.squeeze(self.rod_state[seg]["kappa_vec_y"]).tolist()[elem]
+                    kappa.z = np.squeeze(self.rod_state[seg]["kappa_vec_z"]).tolist()[elem]
                 single_rod_state_msg.poses.append(elem_pose)
                 single_rod_state_msg.velocities.append(elem_vel)
+                single_rod_state_msg.kappa.append(kappa)
             self.all_rods_state_msg.rod_states.append(single_rod_state_msg)
         
         

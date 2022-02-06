@@ -87,6 +87,7 @@ class ElasticaControl(Node):
             for i in range(msg.num_rods):
                 self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rod_states[i].poses)))
                 self.get_logger().info("I heard seg'"+str(i+1)+"s elements velocity: "+ (str(msg.rod_states[i].velocities)))
+                self.get_logger().info("I heard seg'"+str(i+1)+"s kappa: "+ (str(msg.rod_states[i].kappa)))
                 self.get_logger().info(5*"\n")
     
     def listener_callback_objs_state(self, msg):

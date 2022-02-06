@@ -60,13 +60,18 @@ def rod_state_mp_arr_create(n_segments, n_objs):
         rod_state[i]["orientation_yy"] = mp.Array('d',n_elements) 
         rod_state[i]["orientation_zz"] = mp.Array('d',n_elements)
 
-        # The array is of size 51 according to 'number of elements for Cosserat rod + 1'
+        # The array is of size 51 according to 'number of elements for Cosserat rod + 1', i.e., number of nodes
         rod_state[i]["position_x"] = mp.Array('d',n_elements+1)    
         rod_state[i]["position_y"] = mp.Array('d',n_elements+1)
         rod_state[i]["position_z"] = mp.Array('d',n_elements+1)
         rod_state[i]["velocity_x"] = mp.Array('d',n_elements+1)
         rod_state[i]["velocity_y"] = mp.Array('d',n_elements+1)
         rod_state[i]["velocity_z"] = mp.Array('d',n_elements+1)
+        
+        # The array is of size 49 according to 'number of elements for Cosserat rod - 1', i.e., number of voronoi
+        rod_state[i]["kappa_vec_x"] = mp.Array('d',n_elements-1)    
+        rod_state[i]["kappa_vec_y"] = mp.Array('d',n_elements-1)
+        rod_state[i]["kappa_vec_z"] = mp.Array('d',n_elements-1)
     
     for i in range(n_objs):
         # The array is of size (3,) with position of the fixed object
@@ -259,7 +264,7 @@ class DefineSnake():
                 if current_step % self.every == 0:
                     qw,qx,qy,qz = [], [], [], []
                     for i in range(n_elements):
-                        Q = system.director_collection[..., i]
+                        Q = system.director_collection.copy()[..., i]
                         qw.append(np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2)
                         qx.append((Q[2, 1] - Q[1, 2]) / (4 * qw[i]))
                         qy.append((Q[0, 2] - Q[2, 0]) / (4 * qw[i]))
@@ -268,12 +273,15 @@ class DefineSnake():
                     rod_state[self.callback_params]["orientation_xx"][:] = np.array(qx)
                     rod_state[self.callback_params]["orientation_yy"][:] = np.array(qy)
                     rod_state[self.callback_params]["orientation_zz"][:] = np.array(qz)
-                    rod_state[self.callback_params]["position_x"][:] = system.position_collection[0]
-                    rod_state[self.callback_params]["position_y"][:] = system.position_collection[1]
-                    rod_state[self.callback_params]["position_z"][:] = system.position_collection[2]
-                    rod_state[self.callback_params]["velocity_x"][:] = system.velocity_collection[0]
-                    rod_state[self.callback_params]["velocity_y"][:] = system.velocity_collection[1]
-                    rod_state[self.callback_params]["velocity_z"][:] = system.velocity_collection[2]
+                    rod_state[self.callback_params]["position_x"][:] = system.position_collection.copy()[0]
+                    rod_state[self.callback_params]["position_y"][:] = system.position_collection.copy()[1]
+                    rod_state[self.callback_params]["position_z"][:] = system.position_collection.copy()[2]
+                    rod_state[self.callback_params]["velocity_x"][:] = system.velocity_collection.copy()[0]
+                    rod_state[self.callback_params]["velocity_y"][:] = system.velocity_collection.copy()[1]
+                    rod_state[self.callback_params]["velocity_z"][:] = system.velocity_collection.copy()[2]
+                    rod_state[self.callback_params]["kappa_vec_x"][:] = system.kappa.copy()[0]
+                    rod_state[self.callback_params]["kappa_vec_y"][:] = system.kappa.copy()[1]
+                    rod_state[self.callback_params]["kappa_vec_z"][:] = system.kappa.copy()[2]
 
                     if time >= 10.0:
                         pp_list_file = open("continuum_snake_"+str((self.callback_params+1))+".dat", "wb")
@@ -294,6 +302,9 @@ class DefineSnake():
                     self.pp_list_copy[self.callback_params]["center_of_mass"].append(
                         system.compute_position_center_of_mass()
                     )
+                    self.pp_list_copy[self.callback_params]["curvature"].append(
+                        system.kappa.copy()
+                    )
 
                     return
         
@@ -309,13 +320,13 @@ class DefineSnake():
 
             def make_callback(self, system, time, current_step: int):
                 if current_step % self.every == 0:
-                    Q = system.director_collection[..., 0]
+                    Q = system.director_collection.copy()[[..., 0]
                     qw  = (np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2)
                     qx = ((Q[2, 1] - Q[1, 2]) / (4 * qw))
                     qy = ((Q[0, 2] - Q[2, 0]) / (4 * qw))
                     qz = ((Q[1, 0] - Q[0, 1]) / (4 * qw))
                     objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_orientation_ww_xx_yy_zz"][:] = np.array([qw,qx,qy,qz])
-                    objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_position"][:] = system.position_collection
+                    objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_position"][:] = system.position_collection.copy()[
                     
                     if time >= 10.0:
                         pp_list_file = open(obj_ids[self.callback_params]+".dat", "wb")
