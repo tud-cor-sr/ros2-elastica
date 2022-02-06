@@ -320,13 +320,13 @@ class DefineSnake():
 
             def make_callback(self, system, time, current_step: int):
                 if current_step % self.every == 0:
-                    Q = system.director_collection.copy()[[..., 0]
+                    Q = system.director_collection.copy()[..., 0]
                     qw  = (np.sqrt(1 + Q[0, 0] + Q[1, 1] + Q[2, 2]) / 2)
                     qx = ((Q[2, 1] - Q[1, 2]) / (4 * qw))
                     qy = ((Q[0, 2] - Q[2, 0]) / (4 * qw))
                     qz = ((Q[1, 0] - Q[0, 1]) / (4 * qw))
                     objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_orientation_ww_xx_yy_zz"][:] = np.array([qw,qx,qy,qz])
-                    objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_position"][:] = system.position_collection.copy()[
+                    objs_state[self.callback_params][str(obj_ids[self.callback_params])+"_position"][:] = system.position_collection.copy()
                     
                     if time >= 10.0:
                         pp_list_file = open(obj_ids[self.callback_params]+".dat", "wb")
