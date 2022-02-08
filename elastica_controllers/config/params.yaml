@@ -3,5 +3,5 @@ elastica_random_control:
     queue_size: 10
     print_params: 1
     pub_frequency: 2.0
-    topic_names: ['/elastica/control_input','/elastica/time_tracker','/elastica/rods_state','/elastica/objs_state']
+    topic_names: ['/elastica/control_input','/elastica/time_tracker','/elastica/rods_state','/elastica/objs_state', '/elastica/pcc_kinematic_states']
     

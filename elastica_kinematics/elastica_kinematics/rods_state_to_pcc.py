@@ -1,5 +1,5 @@
 __doc__ = """
-For publishingr random control commands for the pneumatic actuation model
+For  deriving a standard Piecewise Constant Curvature (PCC) kinematic description of the continuum robot's state
 """
 import numpy as np
 import rclpy
@@ -10,10 +10,10 @@ from elastica_msgs.msg import *
 
 
 ##########ROS2######################################################
-class ElasticaControl(Node):
+class PccKinematics(Node):
     
     def __init__(self):
-        super().__init__('elastica_random_control')
+        super().__init__('rods_state_to_pcc')
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -31,12 +31,12 @@ class ElasticaControl(Node):
         self.no_of_objects = 1 #Number of objects simualted in ELastica
         self.count = 0
 
-        self.control_input_msg = ControlInput()
+        self.pcc_kin_state_msg = PccKinematicStates()
 
-        self.publisher_control_inp  =  self.create_publisher(ControlInput, self.topic_names[0], self.queue_size)
+        self.publisher_pcc_kin_state  =  self.create_publisher(PccKinematicStates, self.topic_names[4], self.queue_size)
         
         
-        self.control_input, self.control_torque_dir =  self.sampleControlTorque()
+        # self.control_input, self.control_torque_dir =  self.sampleControlTorque()
         timer_period = 1/self.pub_frequency  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
@@ -76,42 +76,45 @@ class ElasticaControl(Node):
 
     def timer_callback(self):
         
-        self.control_input_msg.control_torques.data =  np.squeeze(self.control_input).tolist()
-        self.control_input_msg.control_torque_dir.data =  (self.control_torque_dir).ravel().tolist()
+        # self.pcc_kin_state_msg.control_torques.data =  np.squeeze(self.control_input).tolist()
+        # self.control_input_msg.control_torque_dir.data =  (self.control_torque_dir).ravel().tolist()
         
-        self.publisher_control_inp.publish(self.control_input_msg)
+        self.publisher_pcc_kin_state.publish(self.pcc_kin_state_msg)
         
     def listener_callback_rods_state(self, msg):
-        if self.print_params: 
-            for i in range(msg.num_rods):
-                self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rod_states[i].poses)))
-                self.get_logger().info("I heard seg'"+str(i+1)+"s elements velocity: "+ (str(msg.rod_states[i].velocities)))
-                self.get_logger().info("I heard seg'"+str(i+1)+"s kappa: "+ (str(msg.rod_states[i].kappa)))
-                self.get_logger().info(5*"\n")
+        # if self.print_params: 
+        #     for i in range(msg.num_rods):
+        #         self.get_logger().info("I heard seg'"+str(i+1)+"s elements pose: "+ (str(msg.rod_states[i].poses)))
+        #         self.get_logger().info("I heard seg'"+str(i+1)+"s elements velocity: "+ (str(msg.rod_states[i].velocities)))
+        #         self.get_logger().info("I heard seg'"+str(i+1)+"s kappa: "+ (str(msg.rod_states[i].kappa)))
+        #         self.get_logger().info(5*"\n")
+        pass
     
     def listener_callback_objs_state(self, msg):
-        obj_names = msg.obj_names.split(',')
-        if self.print_params: 
-            for i in range(msg.num_objects):
-                self.get_logger().info("I heard "+obj_names[i]+"'s pose: "+ (str(msg.obj_poses[i])))
-                self.get_logger().info(5*"\n")
+        # obj_names = msg.obj_names.split(',')
+        # if self.print_params: 
+        #     for i in range(msg.num_objects):
+        #         self.get_logger().info("I heard "+obj_names[i]+"'s pose: "+ (str(msg.obj_poses[i])))
+        #         self.get_logger().info(5*"\n")
+        pass
                 
         
     def listener_callback_control_input_change(self, msg):
-        if self.print_params: 
-            self.get_logger().info("I heard control points"+ (str(msg.current_sim_time)))
+        # if self.print_params: 
+        #     self.get_logger().info("I heard control points"+ (str(msg.current_sim_time)))
         
-        if int(msg.current_sim_time) % 3 == 0 and self.count ==0 and (msg.current_sim_time)>3.0 :
-                self.control_input, self.control_torque_dir  = self.sampleControlTorque()
-                self.count = 1
-                self.get_logger().info("CHANGING CONTROL TORQUE")
-        if self.count==1 and msg.current_sim_time % 3>2.9:
-                self.count =0
+        # if int(msg.current_sim_time) % 3 == 0 and self.count ==0 and (msg.current_sim_time)>3.0 :
+        #         self.control_input, self.control_torque_dir  = self.sampleControlTorque()
+        #         self.count = 1
+        #         self.get_logger().info("CHANGING CONTROL TORQUE")
+        # if self.count==1 and msg.current_sim_time % 3>2.9:
+        #         self.count =0
+        pass
 
 def main():
     rclpy.init(args=None)
-    elastica_control = ElasticaControl()
-    rclpy.spin(elastica_control)
+    pcc_kinematics = PccKinematics()
+    rclpy.spin(pcc_kinematics)
     
 if __name__== "__main__":
     main()
