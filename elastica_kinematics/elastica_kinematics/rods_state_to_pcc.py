@@ -51,15 +51,15 @@ class PccKinematics(Node):
         self.subscription_objs_state
         
         
-    def sampleControlTorque(self):
+    def transformation(self,phi_i, theta_i, L_i ):
         """
-        Sample usable random torque values for each direcitonal vector.
+        n homogenous transformations for n segmnets. 
+        Describes the movement of the pneumatically actuated robot segment 
+        if it is bending with a constant curvature.
+        maps each reference system to subsequent one and describes robot's kinematics
+        
         Returns
         -------
-        numpy.ndarray
-            1D array (no_of_segments,) containing data with 'float' type. Total torque applied to a rod-like object.
-        numpy.ndarray
-            2D array (number_of_segments, no_of_directions) containing data with 'float' type. Directions in which total torque applied to a rod-like object.
         """
         
         random_control_torque = (np.random.rand(self.no_of_segments))
