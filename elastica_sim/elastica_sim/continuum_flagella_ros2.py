@@ -35,8 +35,8 @@ n_elements = 50 #number of elements for Cosserat rod
 def create_data_structs(size, data_struct_name): 
     '''
     Objects with same id were creating data storage issues, i.e., 
-    shared their values (reason being same id is a temporary explanation and to solve the issue this function is coded)
-    The error appeared the step of new pneumatic actuation model for multiple segments
+    shared their values among them (reason being, same id is a temporary explanation and to solve the issue this function is coded)
+    The error appeared at the step of creation of new pneumatic actuation model for multiple segments
     '''
     data_struct = []
     for _ in range(size): data_struct.append(eval(data_struct_name)) 
@@ -73,6 +73,15 @@ def rod_state_mp_arr_create(n_segments, n_objs):
         rod_state[i]["kappa_vec_x"] = mp.Array('d',n_elements-1)    
         rod_state[i]["kappa_vec_y"] = mp.Array('d',n_elements-1)
         rod_state[i]["kappa_vec_z"] = mp.Array('d',n_elements-1)
+
+        # The array is of size 50 according to 'number of elements for Cosserat rod'
+        rod_state[i]["lengths"] = mp.Array('d',n_elements) 
+        
+        # The array is of size 3 according to 'dim of the vector'
+        rod_state[i]["normal_director_base"] = mp.Array('d',3) 
+        
+        # The array is of size 3 according to 'dim of the vector'
+        rod_state[i]["normal_director_tip"] = mp.Array('d',3) 
     
     for i in range(n_objs):
         # The array is of size (3,) with position of the fixed object
@@ -263,6 +272,9 @@ class DefineFlagella():
                     rod_state[self.callback_params]["kappa_vec_x"][:] = system.kappa.copy()[0]
                     rod_state[self.callback_params]["kappa_vec_y"][:] = system.kappa.copy()[1]
                     rod_state[self.callback_params]["kappa_vec_z"][:] = system.kappa.copy()[2]
+                    rod_state[self.callback_params]["lengths"][:] = system.lengths
+                    rod_state[self.callback_params]["normal_director_base"][:] = system.director_collection[1,:,0]
+                    rod_state[self.callback_params]["normal_director_tip"][:] = system.director_collection[1,:,-1]
                     
                     if time >= 10.0:
                         pp_list_file = open("continuum_flagella_"+str((self.callback_params+1))+".dat", "wb")
