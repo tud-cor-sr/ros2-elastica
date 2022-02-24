@@ -13,7 +13,7 @@ import math as m
 class PccKinematics(Node):
     
     def __init__(self):
-        super().__init__('rods_state_to_pcc')
+        super().__init__('rods_state_to_pcc_conv')
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -31,7 +31,7 @@ class PccKinematics(Node):
         self.no_of_objects = 1 #Number of objects simualted in ELastica
         self.count = 0
         
-        self.phi_arr, self.theta_arr, self.L_arr = [],[],[]
+        self.phi_arr, self.theta_arr, self.L_arr = np.empty((self.no_of_segments,1)),np.empty((self.no_of_segments,1)),np.empty((self.no_of_segments,1))
 
         self.pcc_kin_state_msg = PccKinematicStates()
 
@@ -91,17 +91,17 @@ class PccKinematics(Node):
             quaternion_tip = np.array([msg.rod_states[i].poses[-1].pose.orientation.w, msg.rod_states[i].poses[-1].pose.orientation.x, \
                                 msg.rod_states[i].poses[-1].pose.orientation.y, msg.rod_states[i].poses[-1].pose.orientation.z])
             phi_i = m.acos((2*((np.dot(quaternion_base,quaternion_tip))**2))-1) 
-            self.phi_arr.append(phi_i)
+            self.phi_arr[i] = (phi_i)
             
             #theta calculation
             theta_i = m.acos((np.dot(np.array(msg.rod_states[i].normal_director_base.data),np.array(msg.rod_states[i].normal_director_tip.data)))/ \
                       (np.linalg.norm(np.array(msg.rod_states[i].normal_director_base.data)*np.linalg.norm(np.array(msg.rod_states[i].normal_director_tip.data)))))
-            self.theta_arr.append(theta_i)
+            self.theta_arr[i] = (theta_i)
             
             #length of curve calculation
             
             L_i = np.sum(np.array(msg.rod_states[i].lengths.data))
-            self.L_arr.append(L_i)
+            self.L_arr[i] = (L_i)
     
 
 def main():

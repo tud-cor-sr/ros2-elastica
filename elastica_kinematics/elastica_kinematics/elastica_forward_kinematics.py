@@ -12,7 +12,7 @@ from geometry_msgs.msg import PoseStamped
 class PccForwardKinematics(Node):
     
     def __init__(self):
-        super().__init__('forward_kinematics')
+        super().__init__('forward_kinematics_calc')
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -89,7 +89,7 @@ class PccForwardKinematics(Node):
         
     def listener_callback_pcc_kin_states(self, msg):
   
-        for i in range(self.no_of_segments):self.transformations[i] = np.array(msg.transformations[i]).reshape((4,4))
+        for i in range(self.no_of_segments):self.transformations[i] = np.array(msg.transformations[i].data).reshape((4,4))
             
 
 def main():

@@ -40,16 +40,16 @@ def generate_launch_description():
     
     node_rods_state_to_pcc =Node(
         package = 'elastica_kinematics',
-        name = 'rods_state_to_pcc',
-        executable = 'rods_state_to_pcc',
+        name = 'rods_state_to_pcc_conv',
+        executable = 'elastica_rod_states_to_PCC',
         output='screen',
         parameters = [config_kin]
     )
     
     node_forward_kinematics =Node(
         package = 'elastica_kinematics',
-        name = 'forward_kinematics',
-        executable = 'forward_kinematics',
+        name = 'forward_kinematics_calc',
+        executable = 'elastica_forward_kinematics',
         output='screen',
         parameters = [config_kin]
     )

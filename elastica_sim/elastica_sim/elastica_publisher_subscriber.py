@@ -126,9 +126,9 @@ class ElasticaPublisherSubscriber(Node):
                 single_rod_state_msg.poses.append(elem_pose)
                 single_rod_state_msg.velocities.append(elem_vel)
                 single_rod_state_msg.kappa.append(kappa)
-            single_rod_state_msg.lengths.data = self.rod_state[seg]["lengths"].tolist()
-            single_rod_state_msg.normal_director_base.data = self.rod_state[seg]["normal_director_base"].tolist()
-            single_rod_state_msg.normal_director_tip.data = self.rod_state[seg]["normal_director_tip"].tolist()
+            single_rod_state_msg.lengths.data = np.squeeze(self.rod_state[seg]["lengths"]).tolist()
+            single_rod_state_msg.normal_director_base.data = np.squeeze(self.rod_state[seg]["normal_director_base"]).tolist()
+            single_rod_state_msg.normal_director_tip.data = np.squeeze(self.rod_state[seg]["normal_director_tip"]).tolist()
             self.all_rods_state_msg.rod_states.append(single_rod_state_msg)
         
         
