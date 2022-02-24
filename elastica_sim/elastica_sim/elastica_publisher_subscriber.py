@@ -20,7 +20,7 @@ class ElasticaPublisherSubscriber(Node):
                 ('queue_size', None),
                 ('print_params', None),
                 ('pub_frequency', None),
-                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/physical_params', 'elastica/objs_state','elastica/pcc_kinematic_states'])
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/physical_params', 'elastica/objs_state','elastica/pcc_kinematic_states', 'elastica/pcc_transformed_poses'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value

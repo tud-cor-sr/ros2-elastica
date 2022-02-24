@@ -8,9 +8,6 @@ from elastica_msgs.msg import *
 from std_msgs.msg import Float64MultiArray
 import math as m
 
-##print("HEYYYYYY", np.sum(system.lengths), np.sum(system.rest_lengths)), #l(length)
-#θ=cos−1(2*⟨q1,q2⟩^2−1)  ⟨q1,q2⟩ is the innner product (a1a2+b1b2+c1c2+d1d2) (phi eq)
-#math.degrees(math.acos((np.dot(np.array(system.director_collection[1,:,0]),np.array(system.director_collection[1,:,-1])))/(np.linalg.norm(np.array(system.director_collection[1,:,0])*np.linalg.norm(np.array(system.director_collection[1,:,-1]))))))  #THETA(kappa)
 
 ##########ROS2######################################################
 class PccKinematics(Node):
@@ -23,7 +20,7 @@ class PccKinematics(Node):
                 ('queue_size', None),
                 ('print_params', None),
                 ('pub_frequency', None),
-                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/objs_state','elastica/pcc_kinematic_states'])
+                ('topic_names', ['elastica/control_input','elastica/time_tracker','elastica/rods_state','elastica/objs_state','elastica/pcc_kinematic_states', 'elastica/pcc_transformed_poses'])
             ])
         self.queue_size = self.get_parameter('queue_size').get_parameter_value().integer_value
         self.print_params = self.get_parameter('print_params').get_parameter_value().integer_value
@@ -40,17 +37,13 @@ class PccKinematics(Node):
 
         self.publisher_pcc_kin_state  =  self.create_publisher(PccKinematicStates, self.topic_names[4], self.queue_size)
         
-        
-        # self.control_input, self.control_torque_dir =  self.sampleControlTorque()
         timer_period = 1/self.pub_frequency  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         
-        self.subscription_sim_time = self.create_subscription(SimulationTime,self.topic_names[1],self.listener_callback_control_input_change,self.queue_size)
         self.subscription_rod_state = self.create_subscription(RodsState, self.topic_names[2],self.listener_callback_rods_state,self.queue_size)
         
         # prevent unused variable warning
-        self.subscription_sim_time
         self.subscription_rod_state
         
         
@@ -110,12 +103,6 @@ class PccKinematics(Node):
             L_i = np.sum(np.array(msg.rod_states[i].lengths.data))
             self.L_arr.append(L_i)
     
- 
-                
-        
-    def listener_callback_control_input_change(self, msg):
-        
-        pass
 
 def main():
     rclpy.init(args=None)
