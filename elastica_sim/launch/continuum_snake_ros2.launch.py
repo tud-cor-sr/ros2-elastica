@@ -14,6 +14,12 @@ def generate_launch_description():
         'config',
         'params.yaml'
         )
+    
+    config_kin = os.path.join(
+        get_package_share_directory('elastica_kinematics'),
+        'config',
+        'params.yaml'
+        )
         
     node_sim=Node(
         package = 'elastica_sim',
@@ -30,6 +36,25 @@ def generate_launch_description():
         output='screen',
         parameters = [config_ctrl]
     )
+    
+    node_rods_state_to_pcc =Node(
+        package = 'elastica_kinematics',
+        name = 'rods_state_to_pcc',
+        executable = 'rods_state_to_pcc',
+        output='screen',
+        parameters = [config_kin]
+    )
+    
+    node_forward_kinematics =Node(
+        package = 'elastica_kinematics',
+        name = 'forward_kinematics',
+        executable = 'forward_kinematics',
+        output='screen',
+        parameters = [config_kin]
+    )
+    
     ld.add_action(node_sim)
     ld.add_action(node_rand_control)
+    ld.add_action(node_rods_state_to_pcc)
+    ld.add_action(node_forward_kinematics)
     return ld
